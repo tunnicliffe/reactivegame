@@ -1,0 +1,202 @@
+pauseMenuConfigs : 
+  pauseMenuInputMap :
+    - - KeyRETURN
+      - Unpause
+    - - Key1
+      - Save1
+    - - KeyF1
+      - Load1
+    - - Key2
+      - Save2
+    - - KeyF2
+      - Load2
+    - - Key3
+      - Save3
+    - - KeyF3
+      - Load3
+    - - Key4
+      - Save4
+    - - KeyF4
+      - Load4
+    - - Key5
+      - Save5
+    - - KeyF5
+      - Load5
+    - - Key6
+      - Save6
+    - - KeyF6
+      - Load6
+    - - Key7
+      - Save7
+    - - KeyF7
+      - Load7
+    - - Key8
+      - Save8
+    - - KeyF8
+      - Load8
+    - - Key9
+      - Save9
+    - - KeyF9
+      - Load9
+    - - KeyESCAPE
+      - Quit
+  pauseMenuCol : [0, 0, 0, 0]
+startMenuConfigs :
+  startMenuInputMap :
+    - - KeyRETURN
+      - StartGame
+    - - KeyESCAPE
+      - Quit
+  startMenuCol : [100, 100, 100, 255]
+  ballCol : [255, 255, 255, 255]
+  startMenuRGSeed : 0
+levelConfigsMap :
+  - - Level1
+    - introConfigs :
+        level : Level1
+        introInputMap :
+          - - KeyRETURN
+            - LeaveIntro
+          - - KeyESCAPE
+            - Quit
+        introCol : [130, 120, 060, 255]
+      playingConfigs :
+        playingInputMap :
+          - - Keyx
+            - IncreaseBoxSize
+          - - Keyz
+            - DecreaseBoxSize
+          - - Keyd
+            - MoveViewRight
+          - - KeyRIGHT
+            - MoveViewRight
+          - - Keya
+            - MoveViewLeft
+          - - KeyLEFT
+            - MoveViewLeft
+          - - Keyw
+            - MoveViewUp
+          - - KeyUP
+            - MoveViewUp
+          - - Keys
+            - MoveViewDown
+          - - KeyDOWN
+            - MoveViewDown
+          - - KeySPACE
+            - EnactCells
+          - - Keyo
+            - IncreaseLifeDelay
+          - - Keyp
+            - DecreaseLifeDelay
+          - - Keyn
+            - NextLife
+          - - KeyRETURN
+            - Pause 
+          - - KeyESCAPE
+            - Quit
+        simBounds : [-100, 100, -100, 100]
+        userBounds : [10, 30, 10, 20]
+        initialLife : [[], []]
+        initialLifeDelay : 500
+        minLifeDelay : 1
+        initialOffsets : [-40, -30]
+        initialBoxSize : 10
+        scoreMeasure : TotalAliveNow
+        winTest : 
+          tag : ScoreOver
+          contents : 150
+        loseTest : 
+          tag : TimeOver
+          contents : 60000 
+      winScreenConfigs :
+        winScreenInputMap : 
+          - - KeyRETURN
+            - NextLevel
+          - - KeyESCAPE
+            - Quit
+        winScreenCol : [130, 060, 060, 255]
+      loseScreenConfigs : 
+        loseScreenInputMap : 
+          - - KeyRETURN
+            - RetryLevel
+          - - KeyESCAPE
+            - Quit
+        loseScreenCol : [130, 060, 130, 255]
+  - - Level2
+    - introConfigs :
+        level : Level2
+        introInputMap :
+          - - KeyRETURN
+            - LeaveIntro
+          - - KeyESCAPE
+            - Quit
+        introCol : [130, 120, 060, 255]
+      playingConfigs :
+        playingInputMap :
+          - - Keyx
+            - IncreaseBoxSize
+          - - Keyz
+            - DecreaseBoxSize
+          - - Keyd
+            - MoveViewRight
+          - - KeyRIGHT
+            - MoveViewRight
+          - - Keya
+            - MoveViewLeft
+          - - KeyLEFT
+            - MoveViewLeft
+          - - Keyw
+            - MoveViewUp
+          - - KeyUP
+            - MoveViewUp
+          - - Keys
+            - MoveViewDown
+          - - KeyDOWN
+            - MoveViewDown
+          - - KeySPACE
+            - EnactCells
+          - - Keyo
+            - IncreaseLifeDelay
+          - - Keyp
+            - DecreaseLifeDelay
+          - - Keyn
+            - NextLife
+          - - KeyRETURN
+            - Pause 
+          - - KeyESCAPE
+            - Quit
+        simBounds : [-100, 100, -100, 100]
+        userBounds : [10, 30, 10, 20]
+        initialLife : [[], []]
+        initialLifeDelay : 500
+        minLifeDelay : 1
+        initialOffsets : [-40, -30]
+        initialBoxSize : 10
+        scoreMeasure : TotalAliveNow
+        winTest : 
+          tag : TimeOver
+          contents : 10000
+        loseTest : 
+          tag : TimeOver
+          contents : 60000 
+      winScreenConfigs :
+        winScreenInputMap : 
+          - - KeyRETURN
+            - NextLevel
+          - - KeyESCAPE
+            - Quit
+        winScreenCol : [130, 060, 060, 255]
+      loseScreenConfigs : 
+        loseScreenInputMap : 
+          - - KeyRETURN
+            - RetryLevel
+          - - KeyESCAPE
+            - Quit
+        loseScreenCol : [130, 060, 130, 255]
+endScreenConfigs :
+  endScreenInputMap : 
+    - - KeySPACE
+      - Quit
+    - - KeyESCAPE
+      - Quit
+  endScreenCol : [215, 003, 252, 255]

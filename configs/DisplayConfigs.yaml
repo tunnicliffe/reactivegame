@@ -1,0 +1,18 @@
+initialWindowDim  : [800, 600]
+windowName        : "Game Engine"
+bgCol             : [160, 160, 160, 255]
+lineCol           : [100, 100, 100, 255]
+aliveCol          : [060, 110, 190, 255]
+checkCol          : [240, 175, 100, 100]
+userAreaCol       : [255, 255, 255, 255]
+pendingBirthCol   : [060, 180, 190, 150]
+pendingDeathCol   : [250, 090, 090, 150]
+framerateLimit    : 60
+textFontSize      : 24
+textCol           : [000, 000, 000, 255]
+counterFontSize   : 20
+counterCol        : [000, 000, 000, 255]
+scoreOffset       : [10, 10]
+timeOffset        : [10, 210]
+fpsOffset         : [10, 410]
+fontPath          : "fonts/Gugi-Regular.ttf"
