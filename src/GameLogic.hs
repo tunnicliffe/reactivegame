@@ -2,18 +2,19 @@
 
 module GameLogic (gameSF) where
 
-import FRP.Yampa
-import SDL (V2 (..), V3 (..), V4 (..), Point (..), MouseButton (..))
-import Foreign.C.Types (CInt)
-import Data.Int (Int32)
-import qualified Data.HashMap.Strict as HM
-import Data.Hashable (Hashable)
-import Data.Maybe (fromJust)
-
 import Types
-import Input (pressBool, releaseBool, quantifyInputPair, quantifyInputPairSF, clicksPressedOrHeld, keyRemapToHM)
-import LifeHash (Grid, simpleLifeBounded, insert, delete, emptyGrid, unionGrid, differenceGrid, addNeighbours)
+import Input      (pressBool, releaseBool, quantifyInputPair, quantifyInputPairSF, clicksPressedOrHeld, keyRemapToHM)
+import LifeHash   (Grid, simpleLifeBounded, insert, delete, emptyGrid, unionGrid, differenceGrid, addNeighbours)
 import Stochastic (brownianMotion2D, brownianMotion3D)
+
+import FRP.Yampa
+import SDL              (V2 (..), V3 (..), V4 (..), Point (..), MouseButton (..))
+import Foreign.C.Types  (CInt)
+import Data.Int         (Int32)
+import Data.Hashable    (Hashable)
+import Data.Maybe       (fromJust)
+
+import qualified Data.HashMap.Strict as HM
 
 ---
 

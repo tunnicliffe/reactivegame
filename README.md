@@ -1,11 +1,11 @@
 ## Reactive Game
 
-A basic game engine made with Functional Reactive Programming; specifically, the Yampa library in Haskell.
+A basic game engine made with Functional Reactive Programming. Specifically, the Yampa library in Haskell.
 
 DEPENDENCIES:
+* stack
 * SDL2 (+ ttf, image, gfx, mixer)
 * pkg-config
-* stack
 
 RUN WITH:
 * stack build
@@ -41,20 +41,25 @@ RUN WITH:
 
 ### To do now
 
+1. Import things like Mixer qualified? Try to reduce/avoid whole module imports (except for Yampa)
+1. Shouldn't *rend* be created once, then passed around?
+1. Change type of *displayFunction* to remove tuple
+1. Type synonyms everywhere to improve readability
+1. Might be prudent to destroy the renderer and *SDL_quit* like they do in some SDL example code..
+1. Non-launch issue (may relate to wsl2 in windows 11) (may be fixed by above)
 1. Switch to paused upon loss of focus
 1. Resizeable window
-1. Major issue: Different modes may sometimes require different display resources. Add discussion of this here
+1. Major issue: Different modes may sometimes require different *displayResource*, needs discussion
+1. *initial_offset* is in pixels, not grid-squares
+1. 'Scroll-speed-multiplier' needs to be added back to the configs
+1. *drawSquaresFromCoOrds* doesn't check if the squares are visible before sending their rendering instructions. However, this doesn't seem to bother the GPU as the code is likely CPU-bound anyway. 
 
 ---
 
 ### To do later
 
-1. *initial_offset* is in pixels, not grid-squares
-1. 'Scroll-speed-multiplier' needs to be added back to the configs
-1. *drawSquaresFromCoOrds* doesn't check if the squares are visible before sending their rendering instructions. However, this doesn't seem to bother the GPU as the code is likely CPU-bound anyway.
 1. More sound effects from [freesoundorg](https://freesound.org/)
 1. Setting the 'clip rectangle' of the renderer to the window size can be done, but doesn't seem to do anything? Maybe it is happening automatically under the hood.. or maybe the 'viewport' is doing that work?
-1. Might be prudent to destroy the renderer and *SDL_quit* like they do in some SDL example code..
 1. [From 60FPS to 500](http://keera.co.uk/blog/2014/10/15/from-60-fps-to-500/)
 1. One day.. [3D?](https://hackage.haskell.org/package/HGamer3D)
-1. Compare performance for different Map types
+1. Compare performance for different map types

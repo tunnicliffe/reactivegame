@@ -40,23 +40,23 @@ module Types
   , EndScreenOutputsData (..)
   ) where
 
-import FRP.Yampa (Event(..), Time, DTime, SF)
-import SDL (V2(..), V3(..), V4(..), Point(..), Texture, Renderer)
-import SDL.Framerate (Framerate)
-import SDL.Mixer (Chunk)
-import Foreign.C.Types (CInt)
-import Data.Int (Int32)
-import Data.Word (Word8)
-import Data.Text (Text)
-import Data.HashMap.Strict (HashMap, empty)
-import Data.Hashable (Hashable)
-import Data.VectorSpace (VectorSpace (..))
-import Data.Aeson (FromJSON (..), FromJSONKey, ToJSON(..))
-import GHC.Generics (Generic)
-import System.Random (StdGen)
-
 import InputKey (InputKey (..), keycodeToIK)
 import LifeHash (Grid)
+
+import FRP.Yampa            (Event(..), Time, DTime, SF)
+import SDL                  (V2(..), V3(..), V4(..), Point(..), Texture, Renderer)
+import SDL.Framerate        (Framerate)
+import SDL.Mixer            (Chunk)
+import Foreign.C.Types      (CInt)
+import Data.Int             (Int32)
+import Data.Word            (Word8)
+import Data.Text            (Text)
+import Data.HashMap.Strict  (HashMap, empty)
+import Data.Hashable        (Hashable)
+import Data.VectorSpace     (VectorSpace (..))
+import Data.Aeson           (FromJSON (..), FromJSONKey, ToJSON(..))
+import GHC.Generics         (Generic)
+import System.Random        (StdGen)
 
 ---
 --Useful instances

@@ -8,17 +8,18 @@ module Input
   , keyRemapToHM
   ) where
 
-import SDL
-
-import FRP.Yampa (SF, arrPrim)
-import Foreign.C.Types (CInt)
-import Data.Int (Int32)
-import Data.List (foldl')
---import Control.Monad (unless)
-import qualified Data.HashMap.Strict as HM
-import Data.Hashable (Hashable)
-
 import Types (UserInputs (..), nullUserInputs, InputState (..), InputAction, InputKey, keycodeToIK)
+
+import SDL
+import FRP.Yampa        (SF, arrPrim)
+import Foreign.C.Types  (CInt)
+import Data.Int         (Int32)
+import Data.List        (foldl')
+import Data.Hashable    (Hashable)
+
+import qualified Data.HashMap.Strict as HM
+
+---
 
 detectInputs :: IO (Maybe UserInputs)
 detectInputs = do

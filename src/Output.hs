@@ -1,16 +1,5 @@
 module Output (displayFunction) where
 
-import FRP.Yampa (Time, DTime, fromEvent, isEvent)
-import SDL
-import SDL.Mixer (play)
-
-import Control.Monad (when)
-import Data.Vector.Storable (fromList)
-import Foreign.C.Types (CInt)
-import Data.Word (Word8)
-import qualified Data.HashMap.Strict as HM
-import Data.Aeson (encodeFile)
-
 import Types ( Colour
              , XYBounds
              , DisplayConfigs (..)
@@ -25,6 +14,19 @@ import Types ( Colour
              , EndScreenOutputsData (..)
              )
 import LifeHash (gridToXYList)
+
+import FRP.Yampa            (Time, DTime, fromEvent, isEvent)
+import SDL
+import SDL.Mixer            (play)
+import Control.Monad        (when)
+import Data.Vector.Storable (fromList)
+import Foreign.C.Types      (CInt)
+import Data.Word            (Word8)
+import Data.Aeson           (encodeFile)
+
+import qualified Data.HashMap.Strict as HM
+
+---
 
 displayFunction :: (DisplayConfigs, DisplayResources) 
                 -> Bool -- Have GameOuputs changed (reactimate skips this check anyway)

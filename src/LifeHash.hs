@@ -10,10 +10,12 @@ module LifeHash
   , delete
   ) where
 
+import Control.Monad  (join)
+import Data.List      (group, sort)
+
 import qualified Data.HashMap.Strict as HM
 
-import Control.Monad (join)
-import Data.List (group, sort)
+---
 
 type Grid = HM.HashMap (Int, Int) ()
 
