@@ -42,11 +42,9 @@ RUN WITH:
 ### To do now
 
 1. Import things like Mixer qualified? Try to reduce/avoid whole module imports (except for Yampa)
-1. Shouldn't *rend* be created once, then passed around?
 1. Change type of *displayFunction* to remove tuple
 1. Type synonyms everywhere to improve readability
-1. Might be prudent to destroy the renderer and *SDL_quit* like they do in some SDL example code..
-1. Non-launch issue (may relate to wsl2 in windows 11) (may be fixed by above)
+1. Non-launch issue (may relate to wsl2 in windows 11) (no idea why)
 1. Switch to paused upon loss of focus
 1. Resizeable window
 1. Major issue: Different modes may sometimes require different *displayResource*, needs discussion

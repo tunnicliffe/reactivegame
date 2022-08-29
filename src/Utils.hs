@@ -27,8 +27,8 @@ import qualified Data.HashMap.Strict as HM
 loadDisplayResources :: DisplayConfigs -> IO DisplayResources
 loadDisplayResources dc = do
 
-  window <- createWindow (windowName dc) defaultWindow
-  rend   <- createRenderer window (-1) defaultRenderer
+  wind <- createWindow (windowName dc) defaultWindow
+  rend <- createRenderer wind (-1) defaultRenderer
   rendererDrawBlendMode rend $= BlendAlphaBlend
 
   Font.initialize
@@ -61,7 +61,7 @@ loadDisplayResources dc = do
   Mixer.openAudio Mixer.defaultAudio 512 -- The ChunkSize I am using here is totally arbitrary
   testChunk <- Mixer.load "sounds/447__tictacshutup__prac-snare.wav"
 
-  pure $ DisplayResources rend scoreT timeT fpsT digitTs charTMap testChunk
+  pure $ DisplayResources wind rend scoreT timeT fpsT digitTs charTMap testChunk
 
 loadFramerateManager :: DisplayConfigs -> IO Framerate.Manager 
 loadFramerateManager displayConf = do 

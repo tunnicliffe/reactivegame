@@ -44,7 +44,7 @@ import InputKey (InputKey (..), keycodeToIK)
 import LifeHash (Grid)
 
 import FRP.Yampa            (Event(..), Time, DTime, SF)
-import SDL                  (V2(..), V3(..), V4(..), Point(..), Texture, Renderer)
+import SDL                  (V2(..), V3(..), V4(..), Point(..), Texture, Renderer, Window)
 import SDL.Framerate        (Framerate)
 import SDL.Mixer            (Chunk)
 import Foreign.C.Types      (CInt)
@@ -228,7 +228,8 @@ instance FromJSON DisplayConfigs
 
 -- DisplayResources are loaded at runtime using some values from the DisplayConfigs
 data DisplayResources = DisplayResources 
-  { renderer          :: Renderer 
+  { window            :: Window
+  , renderer          :: Renderer 
   , scoreTexture      :: Texture
   , timeTexture       :: Texture
   , fpsTexture        :: Texture
