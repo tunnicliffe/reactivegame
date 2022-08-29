@@ -44,15 +44,15 @@ recordEvent acc pl = case pl of
     acc
 
 addKeyInput :: UserInputs -> Keycode -> InputState -> UserInputs
-addKeyInput gi kc ks = gi {keyboardInputs = (keycodeToIK kc, ks) : (keyboardInputs gi)}
+addKeyInput gi kc ks = gi {keyboardInputs = (keycodeToIK kc, ks) : keyboardInputs gi}
 
 inputState :: InputMotion -> Bool -> InputState 
 inputState Pressed hold = if hold then Hold else Press
 inputState _       _    = Release 
 
 addMouseInput :: UserInputs -> MouseButton -> (Point V2 Int32, InputState) -> UserInputs
-addMouseInput gi ButtonLeft  x = gi {mouseLeftInputs  = x : (mouseLeftInputs  gi)}
-addMouseInput gi ButtonRight x = gi {mouseRightInputs = x : (mouseRightInputs gi)}
+addMouseInput gi ButtonLeft  x = gi {mouseLeftInputs  = x : mouseLeftInputs  gi}
+addMouseInput gi ButtonRight x = gi {mouseRightInputs = x : mouseRightInputs gi}
 
 ---
 
@@ -79,8 +79,8 @@ quantifyInputPairSF levels = arrPrim $ quantifyInputPair levels
 ---
 
 clicksPressedOrHeld :: UserInputs -> MouseButton -> [Point V2 Int32]
-clicksPressedOrHeld ri ButtonLeft  = fst . unzip $ filter clickCheckPH $ mouseLeftInputs  ri 
-clicksPressedOrHeld ri ButtonRight = fst . unzip $ filter clickCheckPH $ mouseRightInputs ri 
+clicksPressedOrHeld ri ButtonLeft  = map fst $ filter clickCheckPH $ mouseLeftInputs ri 
+clicksPressedOrHeld ri ButtonRight = map fst $ filter clickCheckPH $ mouseRightInputs ri 
 
 clickCheckPH :: (Point V2 Int32, InputState) -> Bool 
 clickCheckPH (_, Release) = False

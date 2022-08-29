@@ -67,7 +67,7 @@ normalTail neg g0 =
   let
     (u1, g1) = random g0
     (u2, g2) = random g1
-    x = (log u1) / rNorm 
+    x = log u1 / rNorm 
     y = log u2
   in 
     if y * (-2) < x * x 

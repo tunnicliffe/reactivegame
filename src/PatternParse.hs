@@ -6,7 +6,7 @@ import Data.List.Split (splitOn)
 
 patternParse :: String -> String -> [(Int,Int)]
 patternParse file_path file_contents = 
-  case reverse . (take 3) $ reverse file_path of 
+  case reverse . take 3 $ reverse file_path of 
     "lif" -> lifeSixStringToList file_contents
     "lls" -> plaintextStringToList file_contents
     "rle" -> rleStringToList file_contents
@@ -17,7 +17,7 @@ lifeSixStringToList raw =
   let
     coord_strings = (init . tail) $ splitOn "\r\n" raw
     coord_string_pairs = map (splitOn " ") coord_strings
-    tupleFunc (x:y:[]) = (read x, read y)
+    tupleFunc [x, y] = (read x, read y)
   in
     map tupleFunc coord_string_pairs
 

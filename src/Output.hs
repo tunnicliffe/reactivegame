@@ -23,6 +23,7 @@ import Data.Vector.Storable (fromList)
 import Foreign.C.Types      (CInt)
 import Data.Word            (Word8)
 import Data.Aeson           (encodeFile)
+import Data.Maybe           (fromMaybe)
 
 import qualified Data.HashMap.Strict as HM
 
@@ -62,7 +63,7 @@ displayFunction (dc, dr) True (PauseMenuOutputs pmo) = do
   --clear rend
   --present rend
   let  (slot, baton) = fromEvent $ saveEvent pmo
-  when (isEvent (saveEvent pmo)) $ encodeFile ("saves/" ++ (show slot) ++ ".sav") baton
+  when (isEvent (saveEvent pmo)) $ encodeFile ("saves/" ++ show slot ++ ".sav") baton
   pure $ quitPM pmo
 
 displayFunction (dc, dr) True (StartMenuOutputs smo) = do
@@ -124,7 +125,7 @@ drawSeparateLines rend ((x,y):ls) = drawLine rend (P x) (P y) >> drawSeparateLin
 drawSquaresFromCoOrds :: Renderer -> Colour -> CInt -> (CInt, CInt) -> [(Int, Int)] -> IO ()
 drawSquaresFromCoOrds rend col size (xOffset, yOffset) coOrds = do
   let
-    makeBox = \(x,y) -> Rectangle (P (V2 ((fromIntegral x)*size-xOffset+1) ((fromIntegral y)*size-yOffset+1))) (V2 (size-1) (size-1))
+    makeBox (x, y) = Rectangle (P (V2 (fromIntegral x * size - xOffset + 1) (fromIntegral y * size - yOffset + 1))) (V2 (size - 1) (size - 1))
     rectVec = fromList $ map makeBox coOrds
   rendererDrawColor rend $= col
   fillRects rend rectVec
@@ -133,7 +134,7 @@ drawSquaresFromCoOrds rend col size (xOffset, yOffset) coOrds = do
 
 drawRectFromBounds :: Renderer -> Colour -> CInt -> (CInt, CInt) -> XYBounds -> IO ()
 drawRectFromBounds rend col size (xOffset, yOffset) (x_min, x_max, y_min, y_max) = do
-  let rect = Rectangle (P (V2 ((fromIntegral x_min)*size-xOffset+1) ((fromIntegral y_min)*size-yOffset+1))) (V2 ((fromIntegral (x_max-x_min))*size) ((fromIntegral (y_max-y_min))*size))
+  let rect = Rectangle (P (V2 (fromIntegral x_min * size - xOffset + 1) (fromIntegral y_min * size - yOffset + 1))) (V2 (fromIntegral (x_max - x_min) * size) (fromIntegral (y_max - y_min) * size))
   rendererDrawColor rend $= col
   fillRect rend (Just rect)
 
@@ -141,18 +142,18 @@ drawCounter :: Renderer -> V2 CInt -> Texture -> [Texture] -> [Int] -> IO ()
 drawCounter rend offset ct dts ns = do
   tWidth <- textureWidth <$> queryTexture ct
   copySimple rend ct offset
-  let newOffset = offset + (V2 tWidth 0)
+  let newOffset = offset + V2 tWidth 0
   drawDigits rend dts newOffset ns
 
 digits :: (Num a, Show a) => a -> [Int] 
-digits n = map readWithDot $ map (:[]) $ show n
+digits n = map (readWithDot . (: [])) $ show n
 
 drawDigits :: Renderer -> [Texture] -> V2 CInt -> [Int] -> IO ()
 drawDigits _ _ _ [] = pure ()
 drawDigits rend dts offset (n:ns) = do
-  digitTWidth <- textureWidth <$> (queryTexture $ head dts)
+  digitTWidth <- textureWidth <$> queryTexture (head dts)
   copySimple rend (dts !! n) offset
-  let newOffset = offset + (V2 digitTWidth 0)
+  let newOffset = offset + V2 digitTWidth 0
   drawDigits rend dts newOffset ns
 
 copySimple :: Renderer -> Texture -> V2 CInt -> IO ()
@@ -171,14 +172,13 @@ readWithDot "." = 10
 readWithDot n   = read n
 
 cleanTimeDigitsInternal :: [Int] -> [Int]
-cleanTimeDigitsInternal (10 : x : y : _) = 10 : x : y : []
+cleanTimeDigitsInternal (10 : x : y : _) = [10, x, y]
 cleanTimeDigitsInternal (x : xs)         = x : cleanTimeDigitsInternal xs
 cleanTimeDigitsInternal []               = []
 -- Shows two significant figures
 
 cleanTimeDigits :: Time -> [Int]
-cleanTimeDigits t = cleanTimeDigitsInternal $ map readWithDot $ map (:[]) $ show t
-
+cleanTimeDigits t = cleanTimeDigitsInternal $ map (readWithDot . (: [])) $ show t
 
 dtToFPS :: DTime -> Int 
 dtToFPS 0  = 999
@@ -188,8 +188,8 @@ drawString :: Renderer -> HM.HashMap Char Texture -> V2 CInt -> String -> IO ()
 drawString _ _ _ [] = pure ()
 drawString rend ctm offset (c:cs) = do 
   let maybeGlyph = HM.lookup c ctm
-  let glyph = maybe (error $ c : " character not in charTextureMap") id maybeGlyph
+  let glyph = fromMaybe (error $ c : " character not in charTextureMap") maybeGlyph
   glyphWidth <- textureWidth <$> queryTexture glyph
   copySimple rend glyph offset
-  let newOffset = offset + (V2 glyphWidth 0)
+  let newOffset = offset + V2 glyphWidth 0
   drawString rend ctm newOffset cs 

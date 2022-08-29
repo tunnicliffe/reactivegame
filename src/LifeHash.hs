@@ -32,16 +32,16 @@ addNeighbours :: Grid -> Grid
 addNeighbours = fromListToGridHMWithNeighbours . gridToXYList 
 
 fromListToGridHM :: [(Int, Int)] -> Grid
-fromListToGridHM = HM.fromList . (`zip` (repeat ()))
+fromListToGridHM = HM.fromList . (`zip` repeat ())
 
 fromListToGridHMWithNeighbours :: [(Int, Int)] -> Grid
-fromListToGridHMWithNeighbours xs = fromListToGridHM (xs ++ (join $ map neighbours xs))
+fromListToGridHMWithNeighbours xs = fromListToGridHM (xs ++ join (map neighbours xs))
 
 neighbours :: (Int, Int) -> [(Int, Int)]
 neighbours (x,y) = [(x-1,y-1),(x-1,y),(x-1,y+1),(x,y-1),(x,y+1),(x+1,y-1),(x+1,y),(x+1,y+1)]
 
 insert :: (Int, Int) -> Grid -> Grid
-insert k gr = HM.insert k () gr
+insert k = HM.insert k ()
 
 delete :: (Int, Int) -> Grid -> Grid
 delete = HM.delete
@@ -59,7 +59,7 @@ deleteNullBounded (x_min, x_max, y_min, y_max) (x,y) gr =
     else gr
 
 gridToXYList :: Grid -> [(Int,Int)]
-gridToXYList = fst . unzip . HM.toList
+gridToXYList = map fst . HM.toList
 
 simpleLifeBounded :: (Int, Int, Int, Int) -> (Grid, Grid) -> (Grid, Grid) 
   --alives BEFORE checks
@@ -72,12 +72,12 @@ simpleLifeBoundedAcc bounds ((x,y) : checks) old_alive_grid new_alive_grid new_c
   let 
     is_alive       = (x,y) `HM.member` old_alive_grid
     locals         = neighbours (x,y)
-    n_locals_alive = length . (filter id) $ map (`HM.member` old_alive_grid) locals
+    n_locals_alive = length . filter id $ map (`HM.member` old_alive_grid) locals
   in
     if is_alive
-    then if ((n_locals_alive==2) || (n_locals_alive==3))
+    then if (n_locals_alive == 2) || (n_locals_alive == 3)
       then simpleLifeBoundedAcc bounds checks old_alive_grid new_alive_grid new_check_grid
       else simpleLifeBoundedAcc bounds checks old_alive_grid (HM.delete (x,y) new_alive_grid) (foldr (insertNullBounded bounds) new_check_grid locals)
-    else if (n_locals_alive==3)
-      then simpleLifeBoundedAcc bounds checks old_alive_grid ((insertNullBounded bounds) (x,y) new_alive_grid) (foldr (insertNullBounded bounds) new_check_grid locals)
+    else if n_locals_alive == 3
+      then simpleLifeBoundedAcc bounds checks old_alive_grid (insertNullBounded bounds (x,y) new_alive_grid) (foldr (insertNullBounded bounds) new_check_grid locals)
       else simpleLifeBoundedAcc bounds checks old_alive_grid new_alive_grid new_check_grid

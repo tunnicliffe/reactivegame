@@ -81,12 +81,12 @@ detectDTimeAndInputs framerateManager _ = do
   dtMilliseconds <- Framerate.delay framerateManager
   maybeInputs    <- detectInputs
   -- print (fromMaybe maybeInputs)
-  pure (fromIntegral $ dtMilliseconds, maybeInputs)
+  pure (fromIntegral dtMilliseconds, maybeInputs)
 
 loadBatons :: DisplayConfigs -> Int -> IO [Maybe Baton]
 loadBatons dc seed = 
   do 
-    loadedBatons <- sequence $ fmap loadBaton ["saves/" ++ [n] ++ ".sav" | n <- "123456789"]
+    loadedBatons <- traverse loadBaton ["saves/" ++ [n] ++ ".sav" | n <- "123456789"]
     let b0 = Just $ initialBaton dc seed
     return (b0 : loadedBatons)
 

@@ -85,7 +85,7 @@ pauseMenuSF pmConf bs = proc userI -> do
   save7E <- edgeTag 7 -< Save7 `pressBool` i
   save8E <- edgeTag 8 -< Save8 `pressBool` i
   save9E <- edgeTag 9 -< Save9 `pressBool` i
-  let saveE = (foldl1 lMerge [save1E, save2E, save3E, save4E, save5E, save6E, save7E, save8E, save9E]) `attach` baton
+  let saveE = foldl1 lMerge [save1E, save2E, save3E, save4E, save5E, save6E, save7E, save8E, save9E] `attach` baton
 
   let bsUpdated = saveE `savesUpdate` bs
 
@@ -120,16 +120,16 @@ setAt n x (y:ys) = y : setAt (n-1) x ys
 
 loadBaton :: Event Int -> [Maybe Baton] -> Event ModeSwitch
 loadBaton NoEvent _ = NoEvent
-loadBaton (Event n) bs = case (bs !! n) of 
+loadBaton (Event n) bs = case bs !! n of 
   Nothing -> NoEvent
-  x       -> Event . LoadLevelMS $ x : (tail bs)
+  x       -> Event . LoadLevelMS $ x : tail bs
 
 ---
 
 startMenuSF :: StartMenuConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 startMenuSF smConf bs = proc userI -> do
   let i = keyRemapToHM userI $ startMenuInputMap smConf
-  bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 (randGen (headB bs) !! 0, randGen (headB bs) !! 1, randGen (headB bs) !! 2) -< ()
+  bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 (head (randGen (headB bs)), randGen (headB bs) !! 1, randGen (headB bs) !! 2) -< ()
   bm2D <- brownianMotion2D (V2 100 100) 2.0 (randGen (headB bs) !! 3, randGen (headB bs) !! 4) -< ()
   bgCol <- arrPrim (fmap (fromInteger . round)) <<< arrPrim (fmap (reflected (0, 255))) -< v3ToV4 bm3D 255
   bP <- arrPrim (fmap round) <<< arrPrim (fmap (reflected (0,400))) -< bm2D 
@@ -139,7 +139,7 @@ startMenuSF smConf bs = proc userI -> do
   returnA -< StartMenuOutputs $ StartMenuOutputsData {startMenuColOut = bgCol, ballColOut = ballCol smConf, ballPos = bP, startGameEvent = startGameEvent, quitSM = Quit `pressBool` i}
 
 v3ToV4 :: V3 a -> a -> V4 a 
-v3ToV4 (V3 x y z) w = V4 x y z w
+v3ToV4 (V3 x y z) = V4 x y z
 
 v4ToV3 :: V4 a -> V3 a 
 v4ToV3 (V4 x y z _) = V3 x y z
@@ -152,7 +152,7 @@ reflected (low, high) x =
     highMinusLow = high - low 
     m = xMinusLow / highMinusLow
     floorM = floor m 
-    q = (fromIntegral floorM) * highMinusLow
+    q = fromIntegral floorM * highMinusLow
   in
     if even floorM
       then x - q
@@ -166,8 +166,8 @@ introSF iConf bs = proc userI -> do
   let baton = headB bs
 
   let updatedBaton = baton { currentLevel = level iConf
-                           , nextLevel = if (level iConf) == Level1 then Level2 else StartScreen} -- NEEDS FIX
-  let updatedBs = (Just updatedBaton) : (tail bs)
+                           , nextLevel    = if level iConf == Level1 then Level2 else StartScreen} -- NEEDS FIX
+  let updatedBs = Just updatedBaton : tail bs
 
   leaveIntroEvent <- edge -< LeaveIntro `pressBool` i
 
@@ -199,8 +199,8 @@ playingSF pConf bs = proc userI -> do
           -<  (boxS, ((MoveViewRight !!! i, MoveViewLeft !!! i), (MoveViewDown !!! i, MoveViewUp !!! i)))
   offsetsPrev <- iPre (twoF round $ initialOffsets pConf) -< offsets
 
-  let extraBirths = filter (`inClosedTwoDim` (userBounds pConf)) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (clicksPressedOrHeld userI ButtonLeft))
-  let extraDeaths = filter (`inClosedTwoDim` (userBounds pConf)) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (clicksPressedOrHeld userI ButtonRight))
+  let extraBirths = filter (`inClosedTwoDim` userBounds pConf) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (clicksPressedOrHeld userI ButtonLeft))
+  let extraDeaths = filter (`inClosedTwoDim` userBounds pConf) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (clicksPressedOrHeld userI ButtonRight))
 
   enactCellsEvent <- edge -< EnactCells `pressBool` i
   let enactCellsEventSFTagged = tag enactCellsEvent (sscan addCoOrdsToPendings (emptyGrid, emptyGrid))
@@ -315,19 +315,19 @@ lifeUpdateBounded simBounds lifeCurrent (Event _, dumpPendingsEvent) = lifeUpdat
   where lifeNew = simpleLifeBounded simBounds lifeCurrent
 
 addCoOrdsToPendings :: (Grid, Grid) -> ([(Int, Int)], [(Int, Int)]) -> (Grid, Grid)
-addCoOrdsToPendings (birthsGrid, deathsGrid) ([],     [])     = (birthsGrid, deathsGrid)
-addCoOrdsToPendings (birthsGrid, deathsGrid) ((b:bs), ds)     = addCoOrdsToPendings (insert b birthsGrid, delete b deathsGrid) (bs, ds)
-addCoOrdsToPendings (birthsGrid, deathsGrid) ([],     (d:ds)) = addCoOrdsToPendings (delete d birthsGrid, insert d deathsGrid) ([], ds) 
+addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   [])   = (birthsGrid, deathsGrid)
+addCoOrdsToPendings (birthsGrid, deathsGrid) (b:bs, ds)   = addCoOrdsToPendings (insert b birthsGrid, delete b deathsGrid) (bs, ds)
+addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   d:ds) = addCoOrdsToPendings (delete d birthsGrid, insert d deathsGrid) ([], ds) 
 
 addExtraBirthsDeaths :: (Grid, Grid) -> (Grid, Grid) -> (Grid, Grid)
 addExtraBirthsDeaths (life_grid, check_grid) (birthsGrid, deathsGrid) = 
-  ((life_grid `unionGrid` birthsGrid) `differenceGrid` deathsGrid, check_grid `unionGrid` (addNeighbours (birthsGrid `unionGrid` deathsGrid)))
+  ((life_grid `unionGrid` birthsGrid) `differenceGrid` deathsGrid, check_grid `unionGrid` addNeighbours (birthsGrid `unionGrid` deathsGrid))
 
 inClosedTwoDim :: Ord a => (a, a) -> (a, a, a, a) -> Bool
 inClosedTwoDim (x,y) (xMin, xMax, yMin, yMax) = and [x >= xMin, x <= xMax, y >= yMin, y <= yMax]
 
 sumWithMin :: (Num a, Ord a) => a -> a -> a -> a
-sumWithMin min x y = if sum>min then sum else min where sum=x+y
+sumWithMin mini x y = if s > mini then s else mini where s = x + y
 
 -- Simple efficient calc, since we're dealing with step functions, x1 is ignored
 -- Used by iterFrom
@@ -335,23 +335,26 @@ stepIntegral :: (Num a, Ord a, Fractional a) => a -> a -> DTime -> a -> a
 stepIntegral x0 _ dt y0 = y0 + (x0 * realToFrac dt)
 
 stepIntegralWithMin :: (Num a, Ord a, Fractional a) => a -> a -> a -> DTime -> a -> a
-stepIntegralWithMin min x0 x1 dt y0 = if y1 > min then y1 else min 
+stepIntegralWithMin mini x0 x1 dt y0 = if y1 > mini then y1 else mini 
   where y1 = stepIntegral x0 x1 dt y0
 
 stepIntegralWithMinMax :: (Num a, Ord a, Fractional a) => (a, a) -> a -> a -> DTime -> a -> a
-stepIntegralWithMinMax (min, max) x0 x1 dt y0 = if y1 < min then min else if y1 > max then max else y1 
+stepIntegralWithMinMax (mini, maxi) x0 x1 dt y0
+  | y1 < mini = mini
+  | y1 > maxi = maxi
+  | otherwise = y1
   where y1 = stepIntegral x0 x1 dt y0
 
 convertPV2ToXY :: (CInt, (CInt, CInt), Point V2 Int32) -> (Int, Int)
-convertPV2ToXY (box_size, (offsetX, offsetY), (P (V2 x y))) = 
+convertPV2ToXY (box_size, (offsetX, offsetY), P (V2 x y)) = 
   (fromIntegral $ (x' + offsetX) `div` box_size, fromIntegral $ (y' + offsetY) `div` box_size) where
     (x', y') = (fromIntegral x, fromIntegral y)
 
 offsetAdjust :: (CInt, CInt) -> (CInt, (Double, Double)) -> (CInt, (Double, Double)) -> DTime -> (Double, Double) -> (Double, Double)
 offsetAdjust (windowW, windowH) (boxSize0, (adjustX0, adjustY0)) (boxSize1, (_,_)) dt (offsetX0, offsetY0) = 
   if boxSize0 == boxSize1
-  then (adjustX0*dt + offsetX0, adjustY0*dt + offsetY0)
-  else (adjustX0*dt + boxSizeR*offsetX0 + (fromIntegral windowW)*(boxSizeR-1)/2, adjustY0*dt + boxSizeR*offsetY0 + (fromIntegral windowH)*(boxSizeR-1)/2) where 
+  then (adjustX0 * dt + offsetX0, adjustY0 * dt + offsetY0)
+  else (adjustX0 * dt + boxSizeR * offsetX0 + fromIntegral windowW * (boxSizeR - 1) / 2, adjustY0 * dt + boxSizeR * offsetY0 + fromIntegral windowH * (boxSizeR - 1) / 2) where 
     boxSizeR = fromIntegral boxSize1 / fromIntegral boxSize0
 
 twoF :: (a -> b) -> (a, a) -> (b, b)
