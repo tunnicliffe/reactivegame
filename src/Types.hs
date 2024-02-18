@@ -1,4 +1,7 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Types 
   ( XYBounds
@@ -56,7 +59,7 @@ import Data.Hashable        (Hashable)
 import Data.VectorSpace     (VectorSpace (..))
 import Data.Aeson           (FromJSON (..), FromJSONKey, ToJSON(..))
 import GHC.Generics         (Generic)
-import System.Random        (StdGen)
+import System.Random.Internal (StdGen(..))
 
 ---
 --Useful instances
@@ -90,6 +93,8 @@ instance FromJSON CInt where
   parseJSON v = toEnum <$> parseJSON v
 instance ToJSON CInt where
   toJSON = toJSON . show
+
+deriving instance Read StdGen
 instance FromJSON StdGen where
   parseJSON v = read <$> parseJSON v
 instance ToJSON StdGen where
