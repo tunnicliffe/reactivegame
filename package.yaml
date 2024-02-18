@@ -4,11 +4,10 @@ github:              "githubuser/reactivegame"
 license:             BSD3
 author:              "Alex Tunnicliffe"
 maintainer:          "alex@tunnicliffe.com"
-copyright:           "2022 Alex Tunnicliffe"
+copyright:           "2024 Alex Tunnicliffe"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
