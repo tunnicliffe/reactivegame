@@ -41,6 +41,7 @@ RUN WITH:
 
 ### To do now
 
+1. Find an import for Normal dist sampling (if possible)
 1. Import things like Mixer qualified? Try to reduce/avoid whole module imports (except for Yampa)
 1. Change type of *displayFunction* to remove tuple
 1. Type synonyms everywhere to improve readability

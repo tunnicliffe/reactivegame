@@ -2,19 +2,19 @@
 
 module GameLogic (gameSF) where
 
-import Types
-import Input      (pressBool, releaseBool, quantifyInputPair, quantifyInputPairSF, clicksPressedOrHeld, keyRemapToHM)
-import LifeHash   (Grid, simpleLifeBounded, insert, delete, emptyGrid, unionGrid, differenceGrid, addNeighbours)
-import Stochastic (brownianMotion2D, brownianMotion3D)
-
 import FRP.Yampa
-import SDL              (V2 (..), V3 (..), V4 (..), Point (..), MouseButton (..))
+import SDL              (V2(..), V3(..), V4(..), Point(..), MouseButton(..))
 import Foreign.C.Types  (CInt)
 import Data.Int         (Int32)
 import Data.Hashable    (Hashable)
 import Data.Maybe       (fromJust)
 
-import qualified Data.HashMap.Strict as HM
+import Types
+import Stochastic       (brownianMotion2D, brownianMotion3D)
+
+import qualified Data.HashMap.Strict  as HM
+import qualified Input                as IN
+import qualified LifeHash             as LH
 
 ---
 
@@ -71,33 +71,33 @@ headB = fromJust . head
 
 pauseMenuSF :: PauseMenuConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 pauseMenuSF pmConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ pauseMenuInputMap pmConf
+  let i = IN.keyRemapToHM userI $ pauseMenuInputMap pmConf
   let baton = headB bs
 
-  unpauseE <- dropEvents 1 <<< edgeTag UnpauseLevelMS -< Unpause `releaseBool` i
+  unpauseE <- dropEvents 1 <<< edgeTag UnpauseLevelMS -< Unpause `IN.releaseBool` i
 
-  save1E <- edgeTag 1 -< Save1 `pressBool` i 
-  save2E <- edgeTag 2 -< Save2 `pressBool` i
-  save3E <- edgeTag 3 -< Save3 `pressBool` i
-  save4E <- edgeTag 4 -< Save4 `pressBool` i
-  save5E <- edgeTag 5 -< Save5 `pressBool` i
-  save6E <- edgeTag 6 -< Save6 `pressBool` i
-  save7E <- edgeTag 7 -< Save7 `pressBool` i
-  save8E <- edgeTag 8 -< Save8 `pressBool` i
-  save9E <- edgeTag 9 -< Save9 `pressBool` i
+  save1E <- edgeTag 1 -< Save1 `IN.pressBool` i 
+  save2E <- edgeTag 2 -< Save2 `IN.pressBool` i
+  save3E <- edgeTag 3 -< Save3 `IN.pressBool` i
+  save4E <- edgeTag 4 -< Save4 `IN.pressBool` i
+  save5E <- edgeTag 5 -< Save5 `IN.pressBool` i
+  save6E <- edgeTag 6 -< Save6 `IN.pressBool` i
+  save7E <- edgeTag 7 -< Save7 `IN.pressBool` i
+  save8E <- edgeTag 8 -< Save8 `IN.pressBool` i
+  save9E <- edgeTag 9 -< Save9 `IN.pressBool` i
   let saveE = foldl1 lMerge [save1E, save2E, save3E, save4E, save5E, save6E, save7E, save8E, save9E] `attach` baton
 
   let bsUpdated = saveE `savesUpdate` bs
 
-  load1E <- edgeTag 1 -< Load1 `pressBool` i 
-  load2E <- edgeTag 2 -< Load2 `pressBool` i 
-  load3E <- edgeTag 3 -< Load3 `pressBool` i 
-  load4E <- edgeTag 4 -< Load4 `pressBool` i 
-  load5E <- edgeTag 5 -< Load5 `pressBool` i 
-  load6E <- edgeTag 6 -< Load6 `pressBool` i 
-  load7E <- edgeTag 7 -< Load7 `pressBool` i 
-  load8E <- edgeTag 8 -< Load8 `pressBool` i 
-  load9E <- edgeTag 9 -< Load9 `pressBool` i 
+  load1E <- edgeTag 1 -< Load1 `IN.pressBool` i 
+  load2E <- edgeTag 2 -< Load2 `IN.pressBool` i 
+  load3E <- edgeTag 3 -< Load3 `IN.pressBool` i 
+  load4E <- edgeTag 4 -< Load4 `IN.pressBool` i 
+  load5E <- edgeTag 5 -< Load5 `IN.pressBool` i 
+  load6E <- edgeTag 6 -< Load6 `IN.pressBool` i 
+  load7E <- edgeTag 7 -< Load7 `IN.pressBool` i 
+  load8E <- edgeTag 8 -< Load8 `IN.pressBool` i 
+  load9E <- edgeTag 9 -< Load9 `IN.pressBool` i 
   let loadE = foldl1 lMerge [load1E, load2E, load3E, load4E, load5E, load6E, load7E, load8E, load9E] -- *** Fix loading here
   let loadEB = loadBaton loadE bsUpdated
 
@@ -105,7 +105,7 @@ pauseMenuSF pmConf bs = proc userI -> do
                                                      , unpauseEvent = unpauseE
                                                      , saveEvent = saveE
                                                      , loadEvent = loadEB
-                                                     , quitPM = Quit `pressBool` i
+                                                     , quitPM = Quit `IN.pressBool` i
                                                      }
 
 savesUpdate :: Event (Int, Baton) -> [Maybe Baton] -> [Maybe Baton]
@@ -128,15 +128,15 @@ loadBaton (Event n) bs = case bs !! n of
 
 startMenuSF :: StartMenuConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 startMenuSF smConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ startMenuInputMap smConf
+  let i = IN.keyRemapToHM userI $ startMenuInputMap smConf
   bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 (head (randGen (headB bs)), randGen (headB bs) !! 1, randGen (headB bs) !! 2) -< ()
   bm2D <- brownianMotion2D (V2 100 100) 2.0 (randGen (headB bs) !! 3, randGen (headB bs) !! 4) -< ()
   bgCol <- arrPrim (fmap (fromInteger . round)) <<< arrPrim (fmap (reflected (0, 255))) -< v3ToV4 bm3D 255
   bP <- arrPrim (fmap round) <<< arrPrim (fmap (reflected (0,400))) -< bm2D 
 
-  startGameEvent <- edgeTag (NextLevelMS bs) -< StartGame `pressBool` i
+  startGameEvent <- edgeTag (NextLevelMS bs) -< StartGame `IN.pressBool` i
 
-  returnA -< StartMenuOutputs $ StartMenuOutputsData {startMenuColOut = bgCol, ballColOut = ballCol smConf, ballPos = bP, startGameEvent = startGameEvent, quitSM = Quit `pressBool` i}
+  returnA -< StartMenuOutputs $ StartMenuOutputsData {startMenuColOut = bgCol, ballColOut = ballCol smConf, ballPos = bP, startGameEvent = startGameEvent, quitSM = Quit `IN.pressBool` i}
 
 v3ToV4 :: V3 a -> a -> V4 a 
 v3ToV4 (V3 x y z) = V4 x y z
@@ -162,25 +162,25 @@ reflected (low, high) x =
 
 introSF :: IntroConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 introSF iConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ introInputMap iConf
+  let i = IN.keyRemapToHM userI $ introInputMap iConf
   let baton = headB bs
 
   let updatedBaton = baton { currentLevel = level iConf
                            , nextLevel    = if level iConf == Level1 then Level2 else StartScreen} -- NEEDS FIX
   let updatedBs = Just updatedBaton : tail bs
 
-  leaveIntroEvent <- edge -< LeaveIntro `pressBool` i
+  leaveIntroEvent <- edge -< LeaveIntro `IN.pressBool` i
 
   returnA -< IntroOutputs $ IntroOutputsData { introColOut = introCol iConf
                                              , leaveIntroEvent = tag leaveIntroEvent (LeaveIntroMS updatedBs)
-                                             , quitIntro = Quit `pressBool` i
+                                             , quitIntro = Quit `IN.pressBool` i
                                              }
 
 ---
 
 playingSF :: PlayingConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 playingSF pConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ playingInputMap pConf
+  let i = IN.keyRemapToHM userI $ playingInputMap pConf
   let baton = headB bs
 
   timeNow <- localTime -< ()
@@ -188,35 +188,35 @@ playingSF pConf bs = proc userI -> do
 
   boxS  <-  arrPrim round 
         <<< iterFrom (stepIntegralWithMin 2) (fromIntegral $ initialBoxSize pConf) 
-        <<< quantifyInputPairSF (-0.05, -0.05, 0, 0.05, 0.05) 
+        <<< IN.quantifyInputPairSF (-0.05, -0.05, 0, 0.05, 0.05) 
         -<  (IncreaseBoxSize !!! i, DecreaseBoxSize !!! i)
   --minBoxSize and maxBoxSize due to be added to Configs
   boxSPrev <- iPre (initialBoxSize pConf) -< boxS
 
   offsets <-  arrPrim (twoF round)
           <<< iterFrom (offsetAdjust (windowDim (headB bs))) (initialOffsets pConf) 
-          <<< identity *** arrPrim (twoF $ quantifyInputPair (-2, -1, 0, 1, 2))
+          <<< identity *** arrPrim (twoF $ IN.quantifyInputPair (-2, -1, 0, 1, 2))
           -<  (boxS, ((MoveViewRight !!! i, MoveViewLeft !!! i), (MoveViewDown !!! i, MoveViewUp !!! i)))
   offsetsPrev <- iPre (twoF round $ initialOffsets pConf) -< offsets
 
-  let extraBirths = filter (`inClosedTwoDim` userBounds pConf) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (clicksPressedOrHeld userI ButtonLeft))
-  let extraDeaths = filter (`inClosedTwoDim` userBounds pConf) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (clicksPressedOrHeld userI ButtonRight))
+  let extraBirths = filter (`inClosedTwoDim` userBounds pConf) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (IN.clicksPressedOrHeld userI ButtonLeft))
+  let extraDeaths = filter (`inClosedTwoDim` userBounds pConf) $ map convertPV2ToXY (zip3 (repeat boxSPrev) (repeat offsetsPrev) (IN.clicksPressedOrHeld userI ButtonRight))
 
-  enactCellsEvent <- edge -< EnactCells `pressBool` i
-  let enactCellsEventSFTagged = tag enactCellsEvent (sscan addCoOrdsToPendings (emptyGrid, emptyGrid))
+  enactCellsEvent <- edge -< EnactCells `IN.pressBool` i
+  let enactCellsEventSFTagged = tag enactCellsEvent (sscan addCoOrdsToPendings (LH.emptyGrid, LH.emptyGrid))
 
-  (pendingB, pendingD) <- drSwitch (sscan addCoOrdsToPendings (emptyGrid, emptyGrid)) -< ((extraBirths, extraDeaths), enactCellsEventSFTagged)
+  (pendingB, pendingD) <- drSwitch (sscan addCoOrdsToPendings (LH.emptyGrid, LH.emptyGrid)) -< ((extraBirths, extraDeaths), enactCellsEventSFTagged)
 
   let dumpPendingsEvent = tag enactCellsEvent (pendingB, pendingD)
 
   lifeDelayEvent  <-  accumBy (sumWithMin (minLifeDelay pConf)) (initialLifeDelay pConf) 
                   <<< arrPrim (filterE (/= 0)) 
                   <<< arrPrim Event 
-                  <<< quantifyInputPairSF (-4, -4, 0, 4, 4) 
+                  <<< IN.quantifyInputPairSF (-4, -4, 0, 4, 4) 
                   -<  (IncreaseLifeDelay !!! i, DecreaseLifeDelay !!! i)
   autoNextlifeEvent <- rSwitch (repeatedly (initialLifeDelay pConf) ()) -< ((), fmap (`repeatedly` ()) lifeDelayEvent) 
 
-  userNextlifeEvent <- edge -< NextLife `pressBool` i
+  userNextlifeEvent <- edge -< NextLife `IN.pressBool` i
 
   let nextlifeEvent = lMerge autoNextlifeEvent userNextlifeEvent
 
@@ -224,7 +224,7 @@ playingSF pConf bs = proc userI -> do
 
   totalA <- arrPrim HM.size -< aliveG -- Inefficient
 
-  menuPressed <- edgeTag (PauseLevelMS bs) -< Pause `pressBool` i
+  menuPressed <- edgeTag (PauseLevelMS bs) -< Pause `IN.pressBool` i
 
   let outputsUnscored = PlayingOutputs $ PlayingOutputsData { windowDimPO   = windowDim baton 
                                                             , userBoundsPO  = userBounds pConf
@@ -239,7 +239,7 @@ playingSF pConf bs = proc userI -> do
                                                             , pendingBirths = pendingB
                                                             , pendingDeaths = pendingD
                                                             , nextLifeBool  = isEvent nextlifeEvent
-                                                            , quitPlaying   = Quit `pressBool` i
+                                                            , quitPlaying   = Quit `IN.pressBool` i
                                                             } 
   -- Partial record declaration. But this enforces the following rules:
   -- 1) scoreMeasure can't depend on the score or switchEvent
@@ -272,24 +272,24 @@ applyPOTest _ _ = error "applyPOTest: applied to wrong GameOutputs subtype"
 
 winScreenSF :: WinScreenConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 winScreenSF wsConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ winScreenInputMap wsConf
-  nlEvent <- edgeTag (NextLevelMS bs) -< NextLevel `pressBool` i
-  returnA -< WinScreenOutputs $ WinScreenOutputsData {winScreenColOut = winScreenCol wsConf, nextLevelEvent = nlEvent, quitWS = Quit `pressBool` i}
+  let i = IN.keyRemapToHM userI $ winScreenInputMap wsConf
+  nlEvent <- edgeTag (NextLevelMS bs) -< NextLevel `IN.pressBool` i
+  returnA -< WinScreenOutputs $ WinScreenOutputsData {winScreenColOut = winScreenCol wsConf, nextLevelEvent = nlEvent, quitWS = Quit `IN.pressBool` i}
 
 ---
 
 loseScreenSF :: LoseScreenConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 loseScreenSF lsConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ loseScreenInputMap lsConf
-  rlEvent <- edgeTag (RestartLevelMS bs) -< RetryLevel `pressBool` i
-  returnA -< LoseScreenOutputs $ LoseScreenOutputsData {loseScreenColOut = loseScreenCol lsConf, retryLevelEvent = rlEvent, quitLS = Quit `pressBool` i}
+  let i = IN.keyRemapToHM userI $ loseScreenInputMap lsConf
+  rlEvent <- edgeTag (RestartLevelMS bs) -< RetryLevel `IN.pressBool` i
+  returnA -< LoseScreenOutputs $ LoseScreenOutputsData {loseScreenColOut = loseScreenCol lsConf, retryLevelEvent = rlEvent, quitLS = Quit `IN.pressBool` i}
 
 ---
 
 endScreenSF :: EndScreenConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 endScreenSF esConf bs = proc userI -> do
-  let i = keyRemapToHM userI $ endScreenInputMap esConf
-  returnA -< EndScreenOutputs $ EndScreenOutputsData {endScreenColOut = endScreenCol esConf, quitES = Quit `pressBool` i}
+  let i = IN.keyRemapToHM userI $ endScreenInputMap esConf
+  returnA -< EndScreenOutputs $ EndScreenOutputsData {endScreenColOut = endScreenCol esConf, quitES = Quit `IN.pressBool` i}
 
 ---
 
@@ -308,20 +308,20 @@ updateSwitchEvent :: GameOutputs -> Event ModeSwitch -> GameOutputs
 updateSwitchEvent (PlayingOutputs x) e = PlayingOutputs (x {switchEvent = e})
 updateSwitchEvent _                  _ = error "updateSwitchEvent applied to wrong GameOutputs subtype"
 
-lifeUpdateBounded :: XYBounds -> (Grid, Grid) -> (Event (), Event (Grid, Grid)) -> (Grid, Grid)
+lifeUpdateBounded :: XYBounds -> (LH.Grid, LH.Grid) -> (Event (), Event (LH.Grid, LH.Grid)) -> (LH.Grid, LH.Grid)
 lifeUpdateBounded _         lifeCurrent (NoEvent, NoEvent)           = lifeCurrent
 lifeUpdateBounded _         lifeCurrent (NoEvent, Event pendings)    = lifeCurrent `addExtraBirthsDeaths` pendings
 lifeUpdateBounded simBounds lifeCurrent (Event _, dumpPendingsEvent) = lifeUpdateBounded simBounds lifeNew (NoEvent, dumpPendingsEvent) 
-  where lifeNew = simpleLifeBounded simBounds lifeCurrent
+  where lifeNew = LH.simpleLifeBounded simBounds lifeCurrent
 
-addCoOrdsToPendings :: (Grid, Grid) -> ([(Int, Int)], [(Int, Int)]) -> (Grid, Grid)
+addCoOrdsToPendings :: (LH.Grid, LH.Grid) -> ([(Int, Int)], [(Int, Int)]) -> (LH.Grid, LH.Grid)
 addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   [])   = (birthsGrid, deathsGrid)
-addCoOrdsToPendings (birthsGrid, deathsGrid) (b:bs, ds)   = addCoOrdsToPendings (insert b birthsGrid, delete b deathsGrid) (bs, ds)
-addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   d:ds) = addCoOrdsToPendings (delete d birthsGrid, insert d deathsGrid) ([], ds) 
+addCoOrdsToPendings (birthsGrid, deathsGrid) (b:bs, ds)   = addCoOrdsToPendings (LH.insert b birthsGrid, LH.delete b deathsGrid) (bs, ds)
+addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   d:ds) = addCoOrdsToPendings (LH.delete d birthsGrid, LH.insert d deathsGrid) ([], ds) 
 
-addExtraBirthsDeaths :: (Grid, Grid) -> (Grid, Grid) -> (Grid, Grid)
+addExtraBirthsDeaths :: (LH.Grid, LH.Grid) -> (LH.Grid, LH.Grid) -> (LH.Grid, LH.Grid)
 addExtraBirthsDeaths (life_grid, check_grid) (birthsGrid, deathsGrid) = 
-  ((life_grid `unionGrid` birthsGrid) `differenceGrid` deathsGrid, check_grid `unionGrid` addNeighbours (birthsGrid `unionGrid` deathsGrid))
+  ((life_grid `LH.unionGrid` birthsGrid) `LH.differenceGrid` deathsGrid, check_grid `LH.unionGrid` LH.addNeighbours (birthsGrid `LH.unionGrid` deathsGrid))
 
 inClosedTwoDim :: Ord a => (a, a) -> (a, a, a, a) -> Bool
 inClosedTwoDim (x,y) (xMin, xMax, yMin, yMax) = and [x >= xMin, x <= xMax, y >= yMin, y <= yMax]

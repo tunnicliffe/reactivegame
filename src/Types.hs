@@ -43,9 +43,6 @@ module Types
   , EndScreenOutputsData (..)
   ) where
 
-import InputKey (InputKey (..), keycodeToIK)
-import LifeHash (Grid)
-
 import FRP.Yampa            (Event(..), Time, DTime, SF)
 import SDL                  (V2(..), V3(..), V4(..), Point(..), Texture, Renderer, Window)
 import SDL.Framerate        (Framerate)
@@ -60,6 +57,9 @@ import Data.VectorSpace     (VectorSpace (..))
 import Data.Aeson           (FromJSON (..), FromJSONKey, ToJSON(..))
 import GHC.Generics         (Generic)
 import System.Random.Internal (StdGen(..))
+
+import InputKey (InputKey (..), keycodeToIK)
+import LifeHash (Grid)
 
 ---
 --Useful instances

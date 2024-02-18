@@ -1,20 +1,5 @@
 module Output (displayFunction) where
 
-import Types ( Colour
-             , XYBounds
-             , DisplayConfigs (..)
-             , DisplayResources (..)
-             , GameOutputs (..)
-             , PauseMenuOutputsData (..)
-             , StartMenuOutputsData (..)
-             , IntroOutputsData (..)
-             , PlayingOutputsData (..)
-             , WinScreenOutputsData (..)
-             , LoseScreenOutputsData (..)
-             , EndScreenOutputsData (..)
-             )
-import LifeHash (gridToXYList)
-
 import FRP.Yampa            (Time, DTime, fromEvent, isEvent)
 import SDL
 import SDL.Mixer            (play)
@@ -24,6 +9,21 @@ import Foreign.C.Types      (CInt)
 import Data.Word            (Word8)
 import Data.Aeson           (encodeFile)
 import Data.Maybe           (fromMaybe)
+
+import Types ( Colour
+             , XYBounds
+             , DisplayConfigs(..)
+             , DisplayResources(..)
+             , GameOutputs(..)
+             , PauseMenuOutputsData(..)
+             , StartMenuOutputsData(..)
+             , IntroOutputsData(..)
+             , PlayingOutputsData(..)
+             , WinScreenOutputsData(..)
+             , LoseScreenOutputsData(..)
+             , EndScreenOutputsData(..)
+             )
+import LifeHash (gridToXYList)
 
 import qualified Data.HashMap.Strict as HM
 

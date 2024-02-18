@@ -1,3 +1,6 @@
+import FRP.Yampa  ( reactimate )
+import Data.Yaml  ( decodeFileThrow )
+
 import Types      ( DisplayResources (window) ) -- Plus FromJSON instances
 import Output     ( displayFunction )
 import GameLogic  ( gameSF )
@@ -7,9 +10,6 @@ import Utils      ( loadDisplayResources
                   , detectDTimeAndInputs
                   , loadBatons
                   )
-
-import FRP.Yampa  ( reactimate )
-import Data.Yaml  ( decodeFileThrow )
 
 import qualified SDL
 

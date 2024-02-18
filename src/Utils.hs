@@ -8,14 +8,14 @@ module Utils
   , loadBatons
   ) where
 
-import Types (UserInputs, nullUserInputs, GameConfigs, DisplayConfigs (..), DisplayResources (..), Baton (..), LevelID (..))
-import Input (detectInputs)
-
 import FRP.Yampa        (DTime)
 import SDL
 import Data.Aeson       (decodeFileStrict)
 import System.Random    (RandomGen, mkStdGen, split)
 import System.Directory (doesFileExist)
+
+import Types (UserInputs, nullUserInputs, GameConfigs, DisplayConfigs (..), DisplayResources (..), Baton (..), LevelID (..))
+import Input (detectInputs)
 
 import qualified SDL.Framerate as Framerate
 import qualified SDL.Font as Font
