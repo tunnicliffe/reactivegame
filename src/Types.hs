@@ -249,7 +249,7 @@ data UserInputs = UserInputs
   { keyboardInputs    :: [(InputKey, InputState)]
   , mouseLeftInputs   :: [(Point V2 Int32, InputState)]
   , mouseRightInputs  :: [(Point V2 Int32, InputState)]
-  , quitBool          :: Bool
+  , quitBool          :: Bool -- TODO: action on this in switchModeDetectSF
   }
 
 nullUserInputs = UserInputs 
@@ -304,7 +304,7 @@ instance Hashable InputAction
 
 ---
 
--- Switching mode means chaning the (SF UserInputs GameOutputs) currently in use
+-- Switching mode means changing the (SF UserInputs GameOutputs) currently in use
 -- This is used to traverse between the modes of the game whilst retaining the Baton
 data ModeSwitch = 
   PauseLevelMS [Maybe Baton] |

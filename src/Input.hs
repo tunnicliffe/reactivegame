@@ -72,6 +72,9 @@ quantifyInputPair (vLow, low, mid, high, vHigh) (Just Press, Nothing) = high
 quantifyInputPair (vLow, low, mid, high, vHigh) (Nothing, Just Hold)  = vLow
 quantifyInputPair (vLow, low, mid, high, vHigh) (Nothing, Just Press) = low 
 quantifyInputPair (vLow, low, mid, high, vHigh) _                     = mid
+  -- For when two inputs have opposing effects, and we want to check their state together
+  -- e.g. 'move left' and 'move right'
+  -- use when you want 'both pressed' == 'neither pressed'
 
 quantifyInputPairSF :: (a, a, a, a, a) -> SF (Maybe InputState, Maybe InputState) a
 quantifyInputPairSF levels = arrPrim $ quantifyInputPair levels
