@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module Output (displayFunction) where
 
 import SDL
@@ -24,27 +26,26 @@ displayFunction
 
 displayFunction _ False _ = pure False
 
-displayFunction (dc, dr) True (PlayingOutputs po) = do 
-  let rend = renderer dr
+displayFunction (DisplayConfigs{..}, DisplayResources{..}) True (PlayingOutputs PlayingOutputsData{..}) = do 
   -- Clear screen
-  rendererDrawColor rend $= V4 0 0 0 255
-  clear rend
+  rendererDrawColor renderer $= V4 0 0 0 255
+  clear renderer
   -- Draw grid and cells
-  drawRectFromBounds rend (bgCol dc) (boxSize po) (viewOffsets po) (simBoundsPO po)
-  drawRectFromBounds rend (userAreaCol dc) (boxSize po) (viewOffsets po) (userBoundsPO po)
-  drawGridLines rend (lineCol dc) (windowDimPO po) (boxSize po) (viewOffsets po)
-  drawSquaresFromCoOrds rend (checkCol dc) (boxSize po) (viewOffsets po) (gridToXYList $ checkGrid po)
-  drawSquaresFromCoOrds rend (aliveCol dc) (boxSize po) (viewOffsets po) (gridToXYList $ aliveGrid po)
-  drawSquaresFromCoOrds rend (pendingBirthCol dc) (boxSize po) (viewOffsets po) (gridToXYList $ pendingBirths po)
-  drawSquaresFromCoOrds rend (pendingDeathCol dc) (boxSize po) (viewOffsets po) (gridToXYList $ pendingDeaths po)
+  drawRectFromBounds renderer bgCol boxSize viewOffsets simBoundsPO
+  drawRectFromBounds renderer userAreaCol boxSize viewOffsets userBoundsPO
+  drawGridLines renderer lineCol windowDimPO boxSize viewOffsets
+  drawSquaresFromCoOrds renderer checkCol boxSize viewOffsets (gridToXYList checkGrid)
+  drawSquaresFromCoOrds renderer aliveCol boxSize viewOffsets (gridToXYList aliveGrid)
+  drawSquaresFromCoOrds renderer pendingBirthCol boxSize viewOffsets (gridToXYList pendingBirths)
+  drawSquaresFromCoOrds renderer pendingDeathCol boxSize viewOffsets (gridToXYList pendingDeaths)
   -- Draw counters
-  drawCounter rend (scoreOffset dc) (scoreTexture dr) (digitTextures dr) (digits $ score po)
-  drawCounter rend (timeOffset dc) (timeTexture dr) (digitTextures dr) (cleanTimeDigits $ timeTotal po)
-  drawCounter rend (fpsOffset dc) (fpsTexture dr) (digitTextures dr) (digits . dtToFPS $ timeJump po)
+  drawCounter renderer scoreOffset scoreTexture digitTextures (digits score)
+  drawCounter renderer timeOffset timeTexture digitTextures (cleanTimeDigits timeTotal)
+  drawCounter renderer fpsOffset fpsTexture digitTextures (digits $ dtToFPS timeJump)
   -- Finish
-  present rend
-  when (nextLifeBool po) (play $ audioChunk dr) --temporary test
-  pure $ quitPlaying po
+  present renderer
+  when nextLifeBool (play audioChunk) -- audio test
+  pure quitPlaying
 
 displayFunction (dc, dr) True (PauseMenuOutputs pmo) = do
   --rendererDrawColor rrnd $= menuColOut pmo

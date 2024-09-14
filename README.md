@@ -51,7 +51,8 @@ RUN WITH:
 1. Major issue: Different modes may sometimes require different *displayResource*, needs discussion
 1. *initial_offset* is in pixels, not grid-squares
 1. 'Scroll-speed-multiplier' needs to be added back to the configs
-1. *drawSquaresFromCoOrds* doesn't check if the squares are visible before sending their rendering instructions. However, this doesn't seem to bother the GPU as the code is likely CPU-bound anyway. 
+1. *drawSquaresFromCoOrds* doesn't check if the squares are visible before sending their rendering instructions. However, this doesn't seem to bother the GPU as the code is likely CPU-bound anyway.
+1. Anything in `Types.hs` that is only used by one module should only be in that module.
 
 ---
 
