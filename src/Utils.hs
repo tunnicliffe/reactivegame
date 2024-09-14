@@ -6,6 +6,7 @@ module Utils
   , initialInputs
   , detectDTimeAndInputs
   , initialBaton
+  , splitN
   ) where
 
 import FRP.Yampa        (DTime)
@@ -21,6 +22,7 @@ import qualified SDL.Framerate as Framerate
 import qualified SDL.Font as Font
 import qualified SDL.Mixer as Mixer
 import qualified Data.HashMap.Strict as HM
+import qualified Data.List.NonEmpty as NE
 
 ---
 
@@ -84,7 +86,7 @@ detectDTimeAndInputs framerateManager _ = do
   pure (fromIntegral dtMilliseconds, maybeInputs)
 
 initialBaton :: DisplayConfig -> Int -> Baton 
-initialBaton dc seed = Baton StartScreen Level1 (splitN 10 $ mkStdGen seed) (initialWindowDim dc) []
+initialBaton dc seed = Baton StartScreen Level1 (mkStdGen seed) (initialWindowDim dc) []
 
 --
 

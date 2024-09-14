@@ -1,4 +1,5 @@
-{-# LANGUAGE DeriveGeneric, NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Types.Configs
   ( GameConfigs(..)
@@ -79,16 +80,16 @@ instance FromJSON PlayingConfigs
   -- win/loseTest MUST NOT depend on switchEvent (but can depend on score)
   -- This is because they're implemented using omitted fields in the record syntax
 
-data ScoreMeasureType = 
-  TotalAliveNow | 
-  TimePassed
-    deriving (Generic)
+data ScoreMeasureType
+  = TotalAliveNow
+  | TimePassed
+  deriving (Generic)
 instance FromJSON ScoreMeasureType
 
-data PlayingOutputsTest = 
-  ScoreOver Int |
-  TimeOver Time
-    deriving (Generic)
+data PlayingOutputsTest
+  = ScoreOver Int
+  | TimeOver Time
+  deriving (Generic)
 instance FromJSON PlayingOutputsTest
 
 data WinScreenConfigs = WinScreenConfigs

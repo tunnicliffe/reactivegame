@@ -1,3 +1,4 @@
 .stack-work/
 reactivegame.cabal
 saves/*.sav
+dist-newstyle/

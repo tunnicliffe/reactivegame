@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -32,6 +33,8 @@ module Types
   , EndScreenOutputsData(..)
   ) where
 
+import ClassyPrelude
+
 import FRP.Yampa            (Event(..), Time, DTime, SF)
 import SDL                  (V2(..), V3(..), V4(..), Point(..), Texture, Renderer, Window)
 import SDL.Framerate        (Framerate)
@@ -46,12 +49,12 @@ import Data.VectorSpace     (VectorSpace (..))
 import Data.Aeson           (FromJSON (..), FromJSONKey, ToJSON(..))
 import GHC.Generics         (Generic)
 import System.Random.Internal (StdGen(..))
+import Text.Read (read)
 
 import InputKey (InputKey (..), keycodeToIK)
 
 
----
---Useful instances
+-- Useful instances
 
 instance RealFloat a => VectorSpace (V2 a) a where
   zeroVector = V2 0 0
@@ -155,53 +158,35 @@ nullUserInputs = UserInputs
 data InputState = Press | Hold | Release 
   deriving (Eq)
 
-data InputAction =
-  Pause |
-  Unpause |
-  Quit |
-  StartGame |
-  LeaveIntro |
-  IncreaseBoxSize | 
-  DecreaseBoxSize |
-  MoveViewRight |
-  MoveViewLeft |
-  MoveViewDown |
-  MoveViewUp |
-  EnactCells |
-  IncreaseLifeDelay |
-  DecreaseLifeDelay |
-  NextLife |
-  NextLevel |
-  RetryLevel |
-  Save1 |
-  Load1 |
-  Save2 |
-  Load2 |
-  Save3 |
-  Load3 |
-  Save4 |
-  Load4 |
-  Save5 |
-  Load5 |
-  Save6 |
-  Load6 |
-  Save7 |
-  Load7 |
-  Save8 |
-  Load8 |
-  Save9 |
-  Load9 
-    deriving (Generic, Eq)
+data InputAction
+  = Pause
+  | Unpause
+  | Quit
+  | StartGame
+  | LeaveIntro
+  | IncreaseBoxSize
+  | DecreaseBoxSize
+  | MoveViewRight
+  | MoveViewLeft
+  | MoveViewDown
+  | MoveViewUp
+  | EnactCells
+  | IncreaseLifeDelay
+  | DecreaseLifeDelay
+  | NextLife
+  | NextLevel
+  | RetryLevel
+  deriving (Generic, Eq)
 instance FromJSON InputAction
 instance Hashable InputAction
 
 ---
 
-data LevelType = 
-  StartScreen |
-  Level1 |
-  Level2
-    deriving (Generic, Eq, Show, Read, Enum)
+data LevelType
+  = StartScreen
+  | Level1
+  | Level2
+  deriving (Generic, Eq, Show, Read, Enum)
 instance Hashable LevelType
 instance FromJSON LevelType
 instance FromJSONKey LevelType
@@ -224,7 +209,7 @@ data ModeSwitch
 data Baton = Baton 
   { currentLevel    :: LevelType
   , nextLevel       :: LevelType
-  , randGen         :: [StdGen]
+  , randGen         :: StdGen
   , windowDim       :: (CInt, CInt)
   , prevLevelScores :: [Int]
   } deriving (Generic)

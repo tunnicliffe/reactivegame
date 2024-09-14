@@ -1,7 +1,9 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE Arrows #-}
 
 module GameLogic (gameSF) where
 
+import ClassyPrelude
 import FRP.Yampa
 import Types
 import Types.Configs
@@ -12,8 +14,10 @@ import Data.Maybe (fromJust)
 import Foreign.C.Types (CInt)
 import SDL (V2(..), V3(..), V4(..), Point(..), MouseButton(..))
 import Stochastic (brownianMotion2D, brownianMotion3D)
+import Utils (splitN)
 
 import qualified Data.HashMap.Strict as HM
+import qualified Data.List.NonEmpty as NE
 import qualified Input as IN
 import qualified LifeHash as LH
 
@@ -85,10 +89,10 @@ pauseMenuSF pmConf b = proc userI -> do
 ---
 
 startMenuSF :: StartMenuConfigs -> Baton -> SF UserInputs GameOutputs
-startMenuSF smConf b = proc userI -> do
+startMenuSF smConf b = let [g1, g2, g3, g4, g5] = splitN 5 (randGen b) in proc userI -> do
   let i = IN.keyRemapToHM userI $ startMenuInputMap smConf
-  bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 (head (randGen b), randGen b !! 1, randGen b !! 2) -< ()
-  bm2D <- brownianMotion2D (V2 100 100) 2.0 (randGen b !! 3, randGen b !! 4) -< ()
+  bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 g1 g2 g3 -< ()
+  bm2D <- brownianMotion2D (V2 100 100) 2.0 g4 g5 -< ()
   bgCol <- arrPrim (fmap (fromInteger . round)) <<< arrPrim (fmap (reflected (0, 255))) -< v3ToV4 bm3D 255
   bP <- arrPrim (fmap round) <<< arrPrim (fmap (reflected (0,400))) -< bm2D 
 

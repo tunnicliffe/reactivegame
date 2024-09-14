@@ -144,9 +144,10 @@ brownianMotion2D
   :: (RandomGen g)
   => V2 Double
   -> Double
-  -> (g, g)
+  -> g
+  -> g
   -> SF () (V2 Double)
-brownianMotion2D pos0 sd (ga, gb) = randomProcess update pos0 [ga, gb] 
+brownianMotion2D pos0 sd ga gb = randomProcess update pos0 [ga, gb] 
   where
   update _ (_, [gx0, gy0]) dt (pos, _) =
     let [(dx, gx1), (dy, gy1)] = parSample sampleStandardNormal [gx0, gy0]
@@ -156,9 +157,11 @@ brownianMotion3D
   :: (RandomGen g)
   => V3 Double
   -> Double
-  -> (g, g, g)
+  -> g
+  -> g
+  -> g
   -> SF () (V3 Double)
-brownianMotion3D pos0 sd (ga, gb, gc) = randomProcess update pos0 [ga, gb, gc] 
+brownianMotion3D pos0 sd ga gb gc = randomProcess update pos0 [ga, gb, gc] 
   where
   update _ (_, [gx0, gy0, gz0]) dt (pos, _) =
     let [(dx, gx1), (dy, gy1), (dz, gz1)] = parSample sampleStandardNormal [gx0, gy0, gz0]
