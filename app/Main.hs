@@ -20,7 +20,7 @@ main = do
   let
     initAction = Utils.initialInputs framerateManager
     inputSensing = Utils.detectDTimeAndInputs framerateManager
-    outputProcessing = displayFunction (displayConfigs, displayResources)
+    outputProcessing = displayFunction displayConfigs displayResources
     signalFunction = gameSF gameConfigs batons
 
   reactimate initAction inputSensing outputProcessing signalFunction

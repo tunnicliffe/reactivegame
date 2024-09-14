@@ -41,9 +41,6 @@ RUN WITH:
 
 ### To do now
 
-1. Find an import for Normal dist sampling (if possible)
-1. Import things like Mixer qualified? Try to reduce/avoid whole module imports (except for Yampa)
-1. Change type of `displayFunction` to remove tuple
 1. Type synonyms everywhere to improve readability
 1. Non-launch issue (may relate to wsl2 in windows 11) (no idea why)
 1. Switch to paused upon loss of focus

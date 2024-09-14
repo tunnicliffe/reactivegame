@@ -19,14 +19,15 @@ import qualified Data.HashMap.Strict as HM
 
 
 displayFunction
-  :: (DisplayConfigs, DisplayResources) 
+  :: DisplayConfigs
+  -> DisplayResources
   -> Bool -- have GameOuputs changed (`reactimate` seems to skip this check anyway?)
   -> GameOutputs 
   -> IO Bool -- should `reactimate` end
 
-displayFunction _ False _ = pure False
+displayFunction _ _ False _ = pure False
 
-displayFunction (DisplayConfigs{..}, DisplayResources{..}) True (PlayingOutputs PlayingOutputsData{..}) = do 
+displayFunction DisplayConfigs{..} DisplayResources{..} True (PlayingOutputs PlayingOutputsData{..}) = do 
   -- Clear screen
   rendererDrawColor renderer $= V4 0 0 0 255
   clear renderer
@@ -47,7 +48,7 @@ displayFunction (DisplayConfigs{..}, DisplayResources{..}) True (PlayingOutputs 
   when nextLifeBool (play audioChunk) -- audio test
   pure quitPlaying
 
-displayFunction (dc, dr) True (PauseMenuOutputs pmo) = do
+displayFunction dc dr True (PauseMenuOutputs pmo) = do
   --rendererDrawColor rrnd $= menuColOut pmo
   --clear rend
   --present rend
@@ -55,7 +56,7 @@ displayFunction (dc, dr) True (PauseMenuOutputs pmo) = do
   when (isEvent (saveEvent pmo)) $ encodeFile ("saves/" ++ show slot ++ ".sav") baton
   pure $ quitPM pmo
 
-displayFunction (dc, dr) True (StartMenuOutputs smo) = do
+displayFunction dc dr True (StartMenuOutputs smo) = do
   let rend = renderer dr
   rendererDrawColor rend $= startMenuColOut smo
   clear rend
@@ -65,7 +66,7 @@ displayFunction (dc, dr) True (StartMenuOutputs smo) = do
   present rend
   pure $ quitSM smo
 
-displayFunction (dc, dr) True (IntroOutputs io) = do
+displayFunction dc dr True (IntroOutputs io) = do
   let rend = renderer dr
   rendererDrawColor rend $= introColOut io
   clear rend
@@ -73,7 +74,7 @@ displayFunction (dc, dr) True (IntroOutputs io) = do
   present rend
   pure $ quitIntro io
 
-displayFunction (dc, dr) True (WinScreenOutputs wso) = do
+displayFunction dc dr True (WinScreenOutputs wso) = do
   let rend = renderer dr
   rendererDrawColor rend $= winScreenColOut wso
   clear rend
@@ -81,7 +82,7 @@ displayFunction (dc, dr) True (WinScreenOutputs wso) = do
   present rend
   pure $ quitWS wso 
 
-displayFunction (dc, dr) True (LoseScreenOutputs lso) = do
+displayFunction dc dr True (LoseScreenOutputs lso) = do
   let rend = renderer dr
   rendererDrawColor rend $= loseScreenColOut lso
   clear rend
@@ -89,7 +90,7 @@ displayFunction (dc, dr) True (LoseScreenOutputs lso) = do
   present rend
   pure $ quitLS lso 
 
-displayFunction (dc, dr) True (EndScreenOutputs eso) = do 
+displayFunction dc dr True (EndScreenOutputs eso) = do 
   let rend = renderer dr
   rendererDrawColor rend $= endScreenColOut eso
   clear rend
