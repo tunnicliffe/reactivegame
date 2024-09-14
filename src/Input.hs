@@ -9,17 +9,16 @@ module Input
   ) where
 
 import SDL
-import FRP.Yampa        (SF, arrPrim)
-import Foreign.C.Types  (CInt)
-import Data.Int         (Int32)
-import Data.List        (foldl')
-import Data.Hashable    (Hashable)
 
-import Types            (UserInputs (..), nullUserInputs, InputState (..), InputAction, InputKey, keycodeToIK)
+import Data.Hashable (Hashable)
+import Data.Int (Int32)
+import Data.List (foldl')
+import Foreign.C.Types (CInt)
+import FRP.Yampa (SF, arrPrim)
+import Types (UserInputs (..), nullUserInputs, InputState (..), InputAction, InputKey, keycodeToIK)
 
 import qualified Data.HashMap.Strict as HM
 
----
 
 detectInputs :: IO (Maybe UserInputs)
 detectInputs = do

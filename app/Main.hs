@@ -1,31 +1,25 @@
-import FRP.Yampa  ( reactimate )
-import Data.Yaml  ( decodeFileThrow )
-
-import Types      ( DisplayResources (window) ) -- Plus FromJSON instances
-import Output     ( displayFunction )
-import GameLogic  ( gameSF )
-import Utils      ( loadDisplayResources
-                  , loadFramerateManager
-                  , initialInputs
-                  , detectDTimeAndInputs
-                  , loadBatons
-                  )
+import Data.Yaml (decodeFileThrow)
+import FRP.Yampa (reactimate)
+import GameLogic (gameSF)
+import Output (displayFunction)
+import Types (DisplayResources (window)) -- plus FromJSON instances
 
 import qualified SDL
+import qualified Utils
 
---
 
+main :: IO ()
 main = do
 
   gameConfigs <- decodeFileThrow "configs/GameConfigs.yaml"
   displayConfigs <- decodeFileThrow "configs/DisplayConfigs.yaml"
-  displayResources <- loadDisplayResources displayConfigs
-  framerateManager <- loadFramerateManager displayConfigs
-  batons <- loadBatons displayConfigs 0
+  displayResources <- Utils.loadDisplayResources displayConfigs
+  framerateManager <- Utils.loadFramerateManager displayConfigs
+  batons <- Utils.loadBatons displayConfigs 0
 
   let
-    initAction = initialInputs framerateManager
-    inputSensing = detectDTimeAndInputs framerateManager
+    initAction = Utils.initialInputs framerateManager
+    inputSensing = Utils.detectDTimeAndInputs framerateManager
     outputProcessing = displayFunction (displayConfigs, displayResources)
     signalFunction = gameSF gameConfigs batons
 

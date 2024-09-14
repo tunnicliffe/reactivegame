@@ -1,38 +1,26 @@
 module Output (displayFunction) where
 
-import FRP.Yampa            (Time, DTime, fromEvent, isEvent)
 import SDL
-import SDL.Mixer            (play)
-import Control.Monad        (when)
-import Data.Vector.Storable (fromList)
-import Foreign.C.Types      (CInt)
-import Data.Word            (Word8)
-import Data.Aeson           (encodeFile)
-import Data.Maybe           (fromMaybe)
 
-import Types ( Colour
-             , XYBounds
-             , DisplayConfigs(..)
-             , DisplayResources(..)
-             , GameOutputs(..)
-             , PauseMenuOutputsData(..)
-             , StartMenuOutputsData(..)
-             , IntroOutputsData(..)
-             , PlayingOutputsData(..)
-             , WinScreenOutputsData(..)
-             , LoseScreenOutputsData(..)
-             , EndScreenOutputsData(..)
-             )
+import Control.Monad (when)
+import Data.Aeson (encodeFile)
+import Data.Maybe (fromMaybe)
+import Data.Vector.Storable (fromList)
+import Data.Word (Word8)
+import Foreign.C.Types (CInt)
+import FRP.Yampa (Time, DTime, fromEvent, isEvent)
 import LifeHash (gridToXYList)
+import SDL.Mixer (play)
+import Types ( Colour, XYBounds, DisplayConfigs(..), DisplayResources(..), GameOutputs(..), PauseMenuOutputsData(..), StartMenuOutputsData(..), IntroOutputsData(..), PlayingOutputsData(..), WinScreenOutputsData(..), LoseScreenOutputsData(..), EndScreenOutputsData(..))
 
 import qualified Data.HashMap.Strict as HM
 
----
 
-displayFunction :: (DisplayConfigs, DisplayResources) 
-                -> Bool -- Have GameOuputs changed (reactimate skips this check anyway)
-                -> GameOutputs 
-                -> IO Bool -- Should reactimate end
+displayFunction
+  :: (DisplayConfigs, DisplayResources) 
+  -> Bool -- have GameOuputs changed (`reactimate` seems to skip this check anyway?)
+  -> GameOutputs 
+  -> IO Bool -- should `reactimate` end
 
 displayFunction _ False _ = pure False
 

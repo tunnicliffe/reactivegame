@@ -11,11 +11,10 @@ module LifeHash
   ) where
 
 import Control.Monad  (join)
-import Data.List      (group, sort)
+import Data.List (group, sort)
 
 import qualified Data.HashMap.Strict as HM
 
----
 
 type Grid = HM.HashMap (Int, Int) ()
 

@@ -3,20 +3,19 @@
 module GameLogic (gameSF) where
 
 import FRP.Yampa
-import SDL              (V2(..), V3(..), V4(..), Point(..), MouseButton(..))
-import Foreign.C.Types  (CInt)
-import Data.Int         (Int32)
-import Data.Hashable    (Hashable)
-import Data.Maybe       (fromJust)
-
 import Types
-import Stochastic       (brownianMotion2D, brownianMotion3D)
 
-import qualified Data.HashMap.Strict  as HM
-import qualified Input                as IN
-import qualified LifeHash             as LH
+import Data.Int (Int32)
+import Data.Hashable (Hashable)
+import Data.Maybe (fromJust)
+import Foreign.C.Types (CInt)
+import SDL (V2(..), V3(..), V4(..), Point(..), MouseButton(..))
+import Stochastic (brownianMotion2D, brownianMotion3D)
 
----
+import qualified Data.HashMap.Strict as HM
+import qualified Input as IN
+import qualified LifeHash as LH
+
 
 gameSF :: GameConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
 gameSF gc batons | null (levelConfigsMap gc) = error "No levels to play!"
@@ -26,6 +25,7 @@ gameSF gc batons = kSwitch (startMenuSF (startMenuConfigs gc) batons) switchMode
 
 switchModeDetectSF :: SF (UserInputs, GameOutputs) (Event ModeSwitch)
 switchModeDetectSF = arrPrim switchModeDetect
+
 switchModeDetect :: (UserInputs, GameOutputs) -> Event ModeSwitch
 switchModeDetect (_, PlayingOutputs o)    = switchEvent o
 switchModeDetect (_, PauseMenuOutputs o)  = lMerge (unpauseEvent o) (loadEvent o)
@@ -34,16 +34,16 @@ switchModeDetect (_, IntroOutputs o)      = leaveIntroEvent o
 switchModeDetect (_, WinScreenOutputs o)  = nextLevelEvent o
 switchModeDetect (_, LoseScreenOutputs o) = retryLevelEvent o
 switchModeDetect (_, EndScreenOutputs o)  = NoEvent
---TODO: We could directly listen for quitting or pausing inputs.
--- Advantage being that we wouldn't need a different quitIntro, quitPlaying, etc.
+  -- TODO: We could directly listen for quitting or pausing inputs.
+  -- Advantage being that we wouldn't need a different quitIntro, quitPlaying, etc.
 
 masterRouter :: GameConfigs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
-masterRouter gc currentSF (PauseLevelMS batons)   = kSwitch (pauseMenuSF (pauseMenuConfigs gc) batons)                           switchModeDetectSF (pausedRouter gc currentSF)
-masterRouter gc _         (NextLevelMS batons)    = kSwitch (introSF (introConfigs (nextLevConf gc batons)) batons)              switchModeDetectSF (masterRouter gc)
-masterRouter gc _         (LeaveIntroMS batons)   = kSwitch (playingSF (playingConfigs (currentLevConf gc batons)) batons)       switchModeDetectSF (masterRouter gc)
-masterRouter gc _         (WinLevelMS batons)     = kSwitch (winScreenSF (winScreenConfigs (currentLevConf gc batons)) batons)   switchModeDetectSF (masterRouter gc)
-masterRouter gc _         (LoseLevelMS batons)    = kSwitch (loseScreenSF (loseScreenConfigs (currentLevConf gc batons)) batons) switchModeDetectSF (masterRouter gc)
-masterRouter gc _         (RestartLevelMS batons) = kSwitch (introSF (introConfigs (currentLevConf gc batons)) batons)           switchModeDetectSF (masterRouter gc)
+masterRouter gc currentSF (PauseLevelMS batons) = kSwitch (pauseMenuSF (pauseMenuConfigs gc) batons) switchModeDetectSF (pausedRouter gc currentSF)
+masterRouter gc _ (NextLevelMS batons)    = kSwitch (introSF (introConfigs (nextLevConf gc batons)) batons)              switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (LeaveIntroMS batons)   = kSwitch (playingSF (playingConfigs (currentLevConf gc batons)) batons)       switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (WinLevelMS batons)     = kSwitch (winScreenSF (winScreenConfigs (currentLevConf gc batons)) batons)   switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (LoseLevelMS batons)    = kSwitch (loseScreenSF (loseScreenConfigs (currentLevConf gc batons)) batons) switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (RestartLevelMS batons) = kSwitch (introSF (introConfigs (currentLevConf gc batons)) batons)           switchModeDetectSF (masterRouter gc)
 --masterRouter _  _ (LoadLevelMS storedSF) = kSwitch storedSF switchModeDetectSF $ masterRouter gc
 
 --Need additional routing function to store the game while paused:

@@ -102,7 +102,7 @@ instance ToJSON StdGen where
 
 ---
 
-type XYBounds = (Int, Int, Int, Int) --x_min,x_max,y_min,y_max
+type XYBounds = (Int, Int, Int, Int) -- (x_min, x_max, y_min, y_max)
 
 type Colour = V4 Word8
 

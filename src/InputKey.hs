@@ -2,8 +2,8 @@
 
 module InputKey (InputKey (..), keycodeToIK) where
 
-import SDL          (Keycode (Keycode))
 import GHC.Generics (Generic)
+import SDL (Keycode (Keycode))
 
 data InputKey
   = KeyUNKNOWN
