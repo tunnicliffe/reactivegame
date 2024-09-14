@@ -35,17 +35,15 @@ RUN WITH:
 
 * We could drop the *InputKey* type and just use the scancodes or keycodes of each key. We'd likely see a peformance increase (as well as being simpler). However, the input maps we define in our configs would be significantly harder to read and write to normal users who haven't memorised the codes.
 * The segregation of *GameConfigs* and *DisplayConfigs* might be overkill. For example, the background colour of a level, defined in *GameConfigs*, has to be passed through the *GameOutputs* as something like *bgColOut*. I still prefer keeping things this way purely for simplicity.
-* As just alluded to, I am not using overlapping record fields. This is more a style decision for now.
 
 ---
 
 ### To do now
 
-1. Type synonyms everywhere to improve readability
-1. Non-launch issue (may relate to wsl2 in windows 11) (no idea why)
+1. Code cleanup
 1. Switch to paused upon loss of focus
 1. Resizeable window
-1. Major issue: Different modes may sometimes require different `displayResource`
+1. Major issue: Different modes may sometimes require different `DisplayResources`
 1. `initial_offset` is in pixels, not grid-squares
 1. 'Scroll-speed-multiplier' needs to be added back to the configs
 1. `drawSquaresFromCoOrds` doesn't check if the squares are visible before sending their rendering instructions. However, this doesn't seem to bother the GPU as the code is likely CPU-bound anyway.
