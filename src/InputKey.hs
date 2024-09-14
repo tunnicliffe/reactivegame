@@ -5,6 +5,9 @@ module InputKey (InputKey (..), keycodeToIK) where
 import GHC.Generics (Generic)
 import SDL (Keycode (Keycode))
 
+
+{-# ANN module "HLint: ignore Use camelCase" #-}
+
 data InputKey
   = KeyUNKNOWN
   | KeyRETURN
