@@ -15,13 +15,14 @@ main = do
   displayConfigs <- decodeFileThrow "configs/DisplayConfigs.yaml"
   displayResources <- Utils.loadDisplayResources displayConfigs
   framerateManager <- Utils.loadFramerateManager displayConfigs
-  batons <- Utils.loadBatons displayConfigs 0
 
   let
     initAction = Utils.initialInputs framerateManager
     inputSensing = Utils.detectDTimeAndInputs framerateManager
     outputProcessing = displayFunction displayConfigs displayResources
-    signalFunction = gameSF gameConfigs batons
+    randSeed = 0
+    baton = Utils.initialBaton displayConfigs randSeed
+    signalFunction = gameSF gameConfigs baton
 
   reactimate initAction inputSensing outputProcessing signalFunction
   

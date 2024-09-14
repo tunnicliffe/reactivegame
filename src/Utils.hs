@@ -5,7 +5,7 @@ module Utils
   , loadFramerateManager
   , initialInputs
   , detectDTimeAndInputs
-  , loadBatons
+  , initialBaton
   ) where
 
 import FRP.Yampa        (DTime)
@@ -14,7 +14,7 @@ import Data.Aeson       (decodeFileStrict)
 import System.Random    (RandomGen, mkStdGen, split)
 import System.Directory (doesFileExist)
 
-import Types (UserInputs, nullUserInputs, GameConfigs, DisplayConfigs (..), DisplayResources (..), Baton (..), LevelID (..))
+import Types (UserInputs, nullUserInputs, DisplayConfig(..), DisplayResources(..), Baton(..), LevelType(..))
 import Input (detectInputs)
 
 import qualified SDL.Framerate as Framerate
@@ -24,7 +24,7 @@ import qualified Data.HashMap.Strict as HM
 
 ---
 
-loadDisplayResources :: DisplayConfigs -> IO DisplayResources
+loadDisplayResources :: DisplayConfig -> IO DisplayResources
 loadDisplayResources dc = do
 
   wind <- createWindow (windowName dc) defaultWindow
@@ -63,7 +63,7 @@ loadDisplayResources dc = do
 
   pure $ DisplayResources wind rend scoreT timeT fpsT digitTs charTMap testChunk
 
-loadFramerateManager :: DisplayConfigs -> IO Framerate.Manager 
+loadFramerateManager :: DisplayConfig -> IO Framerate.Manager 
 loadFramerateManager displayConf = do 
   framerateManager <- Framerate.manager 
   Framerate.set framerateManager (framerateLimit displayConf)
@@ -83,19 +83,7 @@ detectDTimeAndInputs framerateManager _ = do
   -- print (fromMaybe maybeInputs)
   pure (fromIntegral dtMilliseconds, maybeInputs)
 
-loadBatons :: DisplayConfigs -> Int -> IO [Maybe Baton]
-loadBatons dc seed = 
-  do 
-    loadedBatons <- traverse loadBaton ["saves/" ++ [n] ++ ".sav" | n <- "123456789"]
-    let b0 = Just $ initialBaton dc seed
-    return (b0 : loadedBatons)
-
-loadBaton :: FilePath -> IO (Maybe Baton)
-loadBaton fp = do 
-  x <- doesFileExist fp 
-  if x then decodeFileStrict fp else return Nothing
-
-initialBaton :: DisplayConfigs -> Int -> Baton 
+initialBaton :: DisplayConfig -> Int -> Baton 
 initialBaton dc seed = Baton StartScreen Level1 (splitN 10 $ mkStdGen seed) (initialWindowDim dc) []
 
 --

@@ -13,13 +13,13 @@ import Foreign.C.Types (CInt)
 import FRP.Yampa (Time, DTime, fromEvent, isEvent)
 import LifeHash (gridToXYList)
 import SDL.Mixer (play)
-import Types ( Colour, XYBounds, DisplayConfigs(..), DisplayResources(..), GameOutputs(..), PauseMenuOutputsData(..), StartMenuOutputsData(..), IntroOutputsData(..), PlayingOutputsData(..), WinScreenOutputsData(..), LoseScreenOutputsData(..), EndScreenOutputsData(..))
+import Types ( Colour, XYBounds, DisplayConfig(..), DisplayResources(..), GameOutputs(..), PauseMenuOutputsData(..), StartMenuOutputsData(..), IntroOutputsData(..), PlayingOutputsData(..), WinScreenOutputsData(..), LoseScreenOutputsData(..), EndScreenOutputsData(..))
 
 import qualified Data.HashMap.Strict as HM
 
 
 displayFunction
-  :: DisplayConfigs
+  :: DisplayConfig
   -> DisplayResources
   -> Bool -- have GameOuputs changed (`reactimate` seems to skip this check anyway?)
   -> GameOutputs 
@@ -27,7 +27,7 @@ displayFunction
 
 displayFunction _ _ False _ = pure False
 
-displayFunction DisplayConfigs{..} DisplayResources{..} True (PlayingOutputs PlayingOutputsData{..}) = do 
+displayFunction DisplayConfig{..} DisplayResources{..} True (PlayingOutputs PlayingOutputsData{..}) = do 
   -- Clear screen
   rendererDrawColor renderer $= V4 0 0 0 255
   clear renderer
@@ -52,8 +52,8 @@ displayFunction dc dr True (PauseMenuOutputs pmo) = do
   --rendererDrawColor rrnd $= menuColOut pmo
   --clear rend
   --present rend
-  let  (slot, baton) = fromEvent $ saveEvent pmo
-  when (isEvent (saveEvent pmo)) $ encodeFile ("saves/" ++ show slot ++ ".sav") baton
+  --let  (slot, baton) = fromEvent $ saveEvent pmo
+  --when (isEvent (saveEvent pmo)) $ encodeFile ("saves/" ++ show slot ++ ".sav") baton
   pure $ quitPM pmo
 
 displayFunction dc dr True (StartMenuOutputs smo) = do

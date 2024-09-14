@@ -16,23 +16,24 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/reactivegame#readme>
 
 dependencies:
+- aeson
 - base >= 4.7 && < 5
-- unordered-containers
-- split
-- Yampa
+- classy-prelude
+- directory
+- hashable
+- parallel
+- random
 - sdl2
 - sdl2-ttf
 - sdl2-image
 - sdl2-mixer
 - sdl2-gfx
-- vector
-- hashable
-- random
-- parallel
 - simple-affine-space
-- aeson
+- split
 - text
-- directory
+- unordered-containers
+- vector
+- Yampa
 
 library:
   source-dirs: src

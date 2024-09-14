@@ -6,41 +6,30 @@
 module Types 
   ( XYBounds
   , Colour
+  , Grid
 
-  , GameConfigs (..)
-  , PauseMenuConfigs (..)
-  , StartMenuConfigs (..)
-  , LevelConfigs (..)
-  , IntroConfigs (..)
-  , PlayingConfigs (..)
-  , LevelID (..)
-  , ScoreMeasure (..)
-  , PlayingOutputsTest (..)
-  , WinScreenConfigs (..)
-  , LoseScreenConfigs (..)
-  , EndScreenConfigs (..)
+  , DisplayConfig(..)
+  , DisplayResources(..)
 
-  , DisplayConfigs (..)
-  , DisplayResources (..)
-
-  , UserInputs (..)
+  , UserInputs(..)
   , nullUserInputs
-  , InputKey (..)
+  , InputKey(..)
   , keycodeToIK
-  , InputState (..)
-  , InputAction (..)
+  , InputState(..)
+  , InputAction(..)
 
-  , ModeSwitch (..)
-  , Baton (..)
+  , LevelType(..)
+  , ModeSwitch(..)
+  , Baton(..)
 
-  , GameOutputs (..)
-  , PauseMenuOutputsData (..)
-  , StartMenuOutputsData (..)
-  , IntroOutputsData (..)
-  , PlayingOutputsData (..)
-  , WinScreenOutputsData (..)
-  , LoseScreenOutputsData (..)
-  , EndScreenOutputsData (..)
+  , GameOutputs(..)
+  , PauseMenuOutputsData(..)
+  , StartMenuOutputsData(..)
+  , IntroOutputsData(..)
+  , PlayingOutputsData(..)
+  , WinScreenOutputsData(..)
+  , LoseScreenOutputsData(..)
+  , EndScreenOutputsData(..)
   ) where
 
 import FRP.Yampa            (Event(..), Time, DTime, SF)
@@ -59,7 +48,7 @@ import GHC.Generics         (Generic)
 import System.Random.Internal (StdGen(..))
 
 import InputKey (InputKey (..), keycodeToIK)
-import LifeHash (Grid)
+
 
 ---
 --Useful instances
@@ -106,110 +95,14 @@ type XYBounds = (Int, Int, Int, Int) -- (x_min, x_max, y_min, y_max)
 
 type Colour = V4 Word8
 
----
-
--- Immutable variables that can only be accessed by the GameLogic SFs
-data GameConfigs = GameConfigs 
-  { pauseMenuConfigs  :: PauseMenuConfigs
-  , startMenuConfigs  :: StartMenuConfigs
-  , levelConfigsMap   :: HashMap LevelID LevelConfigs
-  , endScreenConfigs  :: EndScreenConfigs
-  } deriving (Generic)
-instance FromJSON GameConfigs
-
-data PauseMenuConfigs = PauseMenuConfigs 
-  { pauseMenuInputMap :: HashMap InputKey InputAction
-  , pauseMenuCol      :: Colour
-  } deriving (Generic)
-instance FromJSON PauseMenuConfigs
-
-data StartMenuConfigs = StartMenuConfigs 
-  { startMenuInputMap     :: HashMap InputKey InputAction
-  , startMenuCol          :: V4 Double
-  , ballCol               :: Colour
-  , startMenuRGSeed       :: Int
-  } deriving (Generic)
-instance FromJSON StartMenuConfigs
-
-data LevelConfigs = LevelConfigs 
-  { introConfigs      :: IntroConfigs
-  , playingConfigs    :: PlayingConfigs
-  , winScreenConfigs  :: WinScreenConfigs
-  , loseScreenConfigs :: LoseScreenConfigs
-  } deriving (Generic)
-instance FromJSON LevelConfigs
-
-data IntroConfigs = IntroConfigs 
-  { level             :: LevelID
-  , introInputMap     :: HashMap InputKey InputAction
-  , introCol          :: Colour
-  } deriving (Generic)
-instance FromJSON IntroConfigs
-
-data PlayingConfigs = PlayingConfigs 
-  { playingInputMap     :: HashMap InputKey InputAction
-  , simBounds           :: XYBounds
-  , userBounds          :: XYBounds
-  , initialLife         :: (Grid, Grid)
-  , initialLifeDelay    :: Time
-  , minLifeDelay        :: Time
-  , initialOffsets      :: (Double, Double) 
-  , initialBoxSize      :: CInt
-  , scoreMeasure        :: ScoreMeasure
-  , winTest             :: PlayingOutputsTest 
-  , loseTest            :: PlayingOutputsTest
-  } deriving (Generic)
-instance FromJSON PlayingConfigs
-  -- scoreMeasure MUST NOT depend on score or switchEvent
-  -- win/loseTest MUST NOT depend on switchEvent (but can depend on score)
-  -- This is because they're implemented using omitted fields in the record syntax
-
-data LevelID = 
-  StartScreen |
-  Level1 |
-  Level2
-    deriving (Generic, Eq, Show, Read)
-instance Hashable LevelID
-instance FromJSON LevelID
-instance FromJSONKey LevelID
-instance ToJSON LevelID
-
-data ScoreMeasure = 
-  TotalAliveNow | 
-  TimePassed
-    deriving (Generic)
-instance FromJSON ScoreMeasure
-
-data PlayingOutputsTest = 
-  ScoreOver Int |
-  TimeOver Time
-    deriving (Generic)
-instance FromJSON PlayingOutputsTest
-
-data WinScreenConfigs = WinScreenConfigs
-  { winScreenInputMap     :: HashMap InputKey InputAction
-  , winScreenCol          :: Colour
-  } deriving (Generic)
-instance FromJSON WinScreenConfigs
-
-data LoseScreenConfigs = LoseScreenConfigs
-  { loseScreenInputMap      :: HashMap InputKey InputAction
-  , loseScreenCol           :: Colour
-  } deriving (Generic)
-instance FromJSON LoseScreenConfigs
-
-data EndScreenConfigs = EndScreenConfigs
-  { endScreenInputMap     :: HashMap InputKey InputAction
-  , endScreenCol          :: Colour
-  } deriving (Generic)
-instance FromJSON EndScreenConfigs
+type Grid = HashMap (Int, Int) ()
 
 ---
 
 -- Immuatable variables that can only be accessed by the displayFunction
 
--- DisplayConfigs are parsed at runtime from a config file 
-data DisplayConfigs = DisplayConfigs
+-- DisplayConfig is parsed at runtime from a config file 
+data DisplayConfig = DisplayConfig
   { initialWindowDim  :: (CInt, CInt)
   , windowName        :: Text  
   , bgCol             :: Colour
@@ -229,9 +122,9 @@ data DisplayConfigs = DisplayConfigs
   , fpsOffset         :: V2 CInt
   , fontPath          :: FilePath
   } deriving (Generic)
-instance FromJSON DisplayConfigs
+instance FromJSON DisplayConfig
 
--- DisplayResources are loaded at runtime using some values from the DisplayConfigs
+-- DisplayResources are loaded at runtime using some values from the DisplayConfig
 data DisplayResources = DisplayResources 
   { window            :: Window
   , renderer          :: Renderer 
@@ -304,24 +197,33 @@ instance Hashable InputAction
 
 ---
 
--- Switching mode means changing the (SF UserInputs GameOutputs) currently in use
--- This is used to traverse between the modes of the game whilst retaining the Baton
-data ModeSwitch = 
-  PauseLevelMS [Maybe Baton] |
-  UnpauseLevelMS | 
-  LoadLevelMS [Maybe Baton] |
-  LeaveIntroMS [Maybe Baton] | 
-  WinLevelMS [Maybe Baton] | 
-  LoseLevelMS [Maybe Baton] | 
-  NextLevelMS [Maybe Baton] | 
-  RestartLevelMS [Maybe Baton]
+data LevelType = 
+  StartScreen |
+  Level1 |
+  Level2
+    deriving (Generic, Eq, Show, Read, Enum)
+instance Hashable LevelType
+instance FromJSON LevelType
+instance FromJSONKey LevelType
+instance ToJSON LevelType
 
--- Any data that we want to keep track of as the game progresses
--- Useful to put any constants that need accessing by multiple modes in here
--- Also used to save and load the game
+-- Switching mode means changing the (SF UserInputs GameOutputs) currently in use
+-- This is used to switch between the modes of the game whilst retaining the Baton
+data ModeSwitch
+  = MSPauseLevel Baton
+  | MSUnpauseLevel
+  | MSLoadLevel Baton
+  | MSLeaveIntro Baton
+  | MSWinLevel Baton
+  | MSLoseLevel Baton
+  | MSNextLevel Baton
+  | MSRestartLevel Baton
+
+-- Any data that we want to keep track of as the game progresses between modes
+-- Probably what we want to use later in saving and loading
 data Baton = Baton 
-  { currentLevel    :: LevelID
-  , nextLevel       :: LevelID
+  { currentLevel    :: LevelType
+  , nextLevel       :: LevelType
   , randGen         :: [StdGen]
   , windowDim       :: (CInt, CInt)
   , prevLevelScores :: [Int]
@@ -343,8 +245,8 @@ data GameOutputs
 data PauseMenuOutputsData = PauseMenuOutputsData
   { pauseMenuColOut :: Colour
   , unpauseEvent    :: Event ModeSwitch
-  , saveEvent       :: Event (Int, Baton) 
-  , loadEvent       :: Event ModeSwitch
+  --, saveEvent       :: Event (Int, Baton) 
+  --, loadEvent       :: Event ModeSwitch
   , quitPM          :: Bool
   }
 

@@ -12,11 +12,10 @@ module LifeHash
 
 import Control.Monad  (join)
 import Data.List (group, sort)
+import Types (Grid)
 
 import qualified Data.HashMap.Strict as HM
 
-
-type Grid = HM.HashMap (Int, Int) ()
 
 unionGrid :: Grid -> Grid -> Grid
 unionGrid = HM.union

@@ -4,6 +4,7 @@ module GameLogic (gameSF) where
 
 import FRP.Yampa
 import Types
+import Types.Configs
 
 import Data.Int (Int32)
 import Data.Hashable (Hashable)
@@ -17,9 +18,9 @@ import qualified Input as IN
 import qualified LifeHash as LH
 
 
-gameSF :: GameConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-gameSF gc batons | null (levelConfigsMap gc) = error "No levels to play!"
-gameSF gc batons = kSwitch (startMenuSF (startMenuConfigs gc) batons) switchModeDetectSF (masterRouter gc) 
+gameSF :: GameConfigs -> Baton -> SF UserInputs GameOutputs
+gameSF gc baton | null (levelConfigsMap gc) = error "No levels to play!"
+gameSF gc baton = kSwitch (startMenuSF (startMenuConfigs gc) baton) switchModeDetectSF (masterRouter gc) 
 
 ---
 
@@ -28,7 +29,7 @@ switchModeDetectSF = arrPrim switchModeDetect
 
 switchModeDetect :: (UserInputs, GameOutputs) -> Event ModeSwitch
 switchModeDetect (_, PlayingOutputs o)    = switchEvent o
-switchModeDetect (_, PauseMenuOutputs o)  = lMerge (unpauseEvent o) (loadEvent o)
+switchModeDetect (_, PauseMenuOutputs o)  = unpauseEvent o -- plus lMerge a load event?
 switchModeDetect (_, StartMenuOutputs o)  = startGameEvent o
 switchModeDetect (_, IntroOutputs o)      = leaveIntroEvent o
 switchModeDetect (_, WinScreenOutputs o)  = nextLevelEvent o
@@ -38,103 +39,60 @@ switchModeDetect (_, EndScreenOutputs o)  = NoEvent
   -- Advantage being that we wouldn't need a different quitIntro, quitPlaying, etc.
 
 masterRouter :: GameConfigs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
-masterRouter gc currentSF (PauseLevelMS batons) = kSwitch (pauseMenuSF (pauseMenuConfigs gc) batons) switchModeDetectSF (pausedRouter gc currentSF)
-masterRouter gc _ (NextLevelMS batons)    = kSwitch (introSF (introConfigs (nextLevConf gc batons)) batons)              switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (LeaveIntroMS batons)   = kSwitch (playingSF (playingConfigs (currentLevConf gc batons)) batons)       switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (WinLevelMS batons)     = kSwitch (winScreenSF (winScreenConfigs (currentLevConf gc batons)) batons)   switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (LoseLevelMS batons)    = kSwitch (loseScreenSF (loseScreenConfigs (currentLevConf gc batons)) batons) switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (RestartLevelMS batons) = kSwitch (introSF (introConfigs (currentLevConf gc batons)) batons)           switchModeDetectSF (masterRouter gc)
---masterRouter _  _ (LoadLevelMS storedSF) = kSwitch storedSF switchModeDetectSF $ masterRouter gc
+masterRouter gc currentSF (MSPauseLevel baton) = kSwitch (pauseMenuSF (pauseMenuConfigs gc) baton) switchModeDetectSF (pausedRouter gc currentSF)
+masterRouter gc _ (MSNextLevel baton)    = kSwitch (introSF (introConfigs (nextLevConf gc baton)) baton)              switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSLeaveIntro baton)   = kSwitch (playingSF (playingConfigs (currentLevConf gc baton)) baton)       switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSWinLevel baton)     = kSwitch (winScreenSF (winScreenConfigs (currentLevConf gc baton)) baton)   switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSLoseLevel baton)    = kSwitch (loseScreenSF (loseScreenConfigs (currentLevConf gc baton)) baton) switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSRestartLevel baton) = kSwitch (introSF (introConfigs (currentLevConf gc baton)) baton)           switchModeDetectSF (masterRouter gc)
+--masterRouter _  _ (MSLoadLevel storedSF) = kSwitch storedSF switchModeDetectSF $ masterRouter gc
 
 --Need additional routing function to store the game while paused:
 pausedRouter :: GameConfigs -> SF UserInputs GameOutputs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
-pausedRouter gc storedSF _ UnpauseLevelMS       = kSwitch storedSF                                   switchModeDetectSF (masterRouter gc)
-pausedRouter gc _        _ (LoadLevelMS batons) = kSwitch (pauseMenuSF (pauseMenuConfigs gc) batons) switchModeDetectSF (pausedRouter gc loadedSF) where
-  loadedSF = kSwitch (playingSF (playingConfigs (currentLevConf gc batons)) batons) switchModeDetectSF (masterRouter gc)
+pausedRouter gc storedSF _ MSUnpauseLevel       = kSwitch storedSF                                  switchModeDetectSF (masterRouter gc)
+pausedRouter gc _        _ (MSLoadLevel baton) = kSwitch (pauseMenuSF (pauseMenuConfigs gc) baton) switchModeDetectSF (pausedRouter gc loadedSF)
+  where loadedSF = kSwitch (playingSF (playingConfigs (currentLevConf gc baton)) baton) switchModeDetectSF (masterRouter gc)
 
 ---
 
-currentLevConf :: GameConfigs -> [Maybe Baton] -> LevelConfigs
-currentLevConf gc bs = HM.lookupDefault (error ("LevelID not in levelConfigsMap: " ++ show x)) x l where
-  x = currentLevel $ headB bs 
+currentLevConf :: GameConfigs -> Baton -> LevelConfigs
+currentLevConf gc b = HM.lookupDefault (error ("LevelType not in levelConfigsMap: " ++ show x)) x l
+  where
+  x = currentLevel b 
   l = levelConfigsMap gc
 
-nextLevConf :: GameConfigs -> [Maybe Baton] -> LevelConfigs
-nextLevConf gc bs = HM.lookupDefault (error ("LevelID not in levelConfigsMap: " ++ show y)) y l where
-  y = nextLevel $ headB bs 
+nextLevConf :: GameConfigs -> Baton -> LevelConfigs
+nextLevConf gc b = HM.lookupDefault (error ("LevelType not in levelConfigsMap: " ++ show y)) y l
+  where
+  y = nextLevel b 
   l = levelConfigsMap gc
-
-headB :: [Maybe Baton] -> Baton 
-headB = fromJust . head
 
 ---
 
-pauseMenuSF :: PauseMenuConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-pauseMenuSF pmConf bs = proc userI -> do
+pauseMenuSF :: PauseMenuConfigs -> Baton -> SF UserInputs GameOutputs
+pauseMenuSF pmConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ pauseMenuInputMap pmConf
-  let baton = headB bs
 
-  unpauseE <- dropEvents 1 <<< edgeTag UnpauseLevelMS -< Unpause `IN.releaseBool` i
-
-  save1E <- edgeTag 1 -< Save1 `IN.pressBool` i 
-  save2E <- edgeTag 2 -< Save2 `IN.pressBool` i
-  save3E <- edgeTag 3 -< Save3 `IN.pressBool` i
-  save4E <- edgeTag 4 -< Save4 `IN.pressBool` i
-  save5E <- edgeTag 5 -< Save5 `IN.pressBool` i
-  save6E <- edgeTag 6 -< Save6 `IN.pressBool` i
-  save7E <- edgeTag 7 -< Save7 `IN.pressBool` i
-  save8E <- edgeTag 8 -< Save8 `IN.pressBool` i
-  save9E <- edgeTag 9 -< Save9 `IN.pressBool` i
-  let saveE = foldl1 lMerge [save1E, save2E, save3E, save4E, save5E, save6E, save7E, save8E, save9E] `attach` baton
-
-  let bsUpdated = saveE `savesUpdate` bs
-
-  load1E <- edgeTag 1 -< Load1 `IN.pressBool` i 
-  load2E <- edgeTag 2 -< Load2 `IN.pressBool` i 
-  load3E <- edgeTag 3 -< Load3 `IN.pressBool` i 
-  load4E <- edgeTag 4 -< Load4 `IN.pressBool` i 
-  load5E <- edgeTag 5 -< Load5 `IN.pressBool` i 
-  load6E <- edgeTag 6 -< Load6 `IN.pressBool` i 
-  load7E <- edgeTag 7 -< Load7 `IN.pressBool` i 
-  load8E <- edgeTag 8 -< Load8 `IN.pressBool` i 
-  load9E <- edgeTag 9 -< Load9 `IN.pressBool` i 
-  let loadE = foldl1 lMerge [load1E, load2E, load3E, load4E, load5E, load6E, load7E, load8E, load9E] -- *** Fix loading here
-  let loadEB = loadBaton loadE bsUpdated
+  unpauseE <- dropEvents 1 <<< edgeTag MSUnpauseLevel -< Unpause `IN.releaseBool` i
 
   returnA -< PauseMenuOutputs $ PauseMenuOutputsData { pauseMenuColOut = pauseMenuCol pmConf
                                                      , unpauseEvent = unpauseE
-                                                     , saveEvent = saveE
-                                                     , loadEvent = loadEB
+                                                     --, saveEvent = saveE
+                                                     --, loadEvent = loadEB
                                                      , quitPM = Quit `IN.pressBool` i
                                                      }
 
-savesUpdate :: Event (Int, Baton) -> [Maybe Baton] -> [Maybe Baton]
-savesUpdate NoEvent = id 
-savesUpdate (Event (slot, b)) = setAt slot (Just b)
-
-setAt :: Int -> a -> [a] -> [a]
-setAt n _ _      | n < 0 = error "SetAt: Negative index "
-setAt _ _ []     = error "SetAt: Invalid index for given list"
-setAt 0 x (_:ys) = x : ys
-setAt n x (y:ys) = y : setAt (n-1) x ys
-
-loadBaton :: Event Int -> [Maybe Baton] -> Event ModeSwitch
-loadBaton NoEvent _ = NoEvent
-loadBaton (Event n) bs = case bs !! n of 
-  Nothing -> NoEvent
-  x       -> Event . LoadLevelMS $ x : tail bs
-
 ---
 
-startMenuSF :: StartMenuConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-startMenuSF smConf bs = proc userI -> do
+startMenuSF :: StartMenuConfigs -> Baton -> SF UserInputs GameOutputs
+startMenuSF smConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ startMenuInputMap smConf
-  bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 (head (randGen (headB bs)), randGen (headB bs) !! 1, randGen (headB bs) !! 2) -< ()
-  bm2D <- brownianMotion2D (V2 100 100) 2.0 (randGen (headB bs) !! 3, randGen (headB bs) !! 4) -< ()
+  bm3D <- brownianMotion3D (v4ToV3 $ startMenuCol smConf) 0.05 (head (randGen b), randGen b !! 1, randGen b !! 2) -< ()
+  bm2D <- brownianMotion2D (V2 100 100) 2.0 (randGen b !! 3, randGen b !! 4) -< ()
   bgCol <- arrPrim (fmap (fromInteger . round)) <<< arrPrim (fmap (reflected (0, 255))) -< v3ToV4 bm3D 255
   bP <- arrPrim (fmap round) <<< arrPrim (fmap (reflected (0,400))) -< bm2D 
 
-  startGameEvent <- edgeTag (NextLevelMS bs) -< StartGame `IN.pressBool` i
+  startGameEvent <- edgeTag (MSNextLevel b) -< StartGame `IN.pressBool` i
 
   returnA -< StartMenuOutputs $ StartMenuOutputsData {startMenuColOut = bgCol, ballColOut = ballCol smConf, ballPos = bP, startGameEvent = startGameEvent, quitSM = Quit `IN.pressBool` i}
 
@@ -160,28 +118,25 @@ reflected (low, high) x =
 
 ---
 
-introSF :: IntroConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-introSF iConf bs = proc userI -> do
+introSF :: IntroConfigs -> Baton -> SF UserInputs GameOutputs
+introSF iConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ introInputMap iConf
-  let baton = headB bs
 
-  let updatedBaton = baton { currentLevel = level iConf
-                           , nextLevel    = if level iConf == Level1 then Level2 else StartScreen} -- NEEDS FIX
-  let updatedBs = Just updatedBaton : tail bs
+  let updatedBaton = b { currentLevel = level iConf
+                       , nextLevel    = succ $ level iConf}
 
   leaveIntroEvent <- edge -< LeaveIntro `IN.pressBool` i
 
   returnA -< IntroOutputs $ IntroOutputsData { introColOut = introCol iConf
-                                             , leaveIntroEvent = tag leaveIntroEvent (LeaveIntroMS updatedBs)
+                                             , leaveIntroEvent = tag leaveIntroEvent (MSLeaveIntro updatedBaton)
                                              , quitIntro = Quit `IN.pressBool` i
                                              }
 
 ---
 
-playingSF :: PlayingConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-playingSF pConf bs = proc userI -> do
+playingSF :: PlayingConfigs -> Baton -> SF UserInputs GameOutputs
+playingSF pConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ playingInputMap pConf
-  let baton = headB bs
 
   timeNow <- localTime -< ()
   timePrev <- iPre 0 -< timeNow
@@ -194,7 +149,7 @@ playingSF pConf bs = proc userI -> do
   boxSPrev <- iPre (initialBoxSize pConf) -< boxS
 
   offsets <-  arrPrim (twoF round)
-          <<< iterFrom (offsetAdjust (windowDim (headB bs))) (initialOffsets pConf) 
+          <<< iterFrom (offsetAdjust (windowDim b)) (initialOffsets pConf) 
           <<< identity *** arrPrim (twoF $ IN.quantifyInputPair (-2, -1, 0, 1, 2))
           -<  (boxS, ((MoveViewRight !!! i, MoveViewLeft !!! i), (MoveViewDown !!! i, MoveViewUp !!! i)))
   offsetsPrev <- iPre (twoF round $ initialOffsets pConf) -< offsets
@@ -224,9 +179,9 @@ playingSF pConf bs = proc userI -> do
 
   totalA <- arrPrim HM.size -< aliveG -- Inefficient
 
-  menuPressed <- edgeTag (PauseLevelMS bs) -< Pause `IN.pressBool` i
+  menuPressed <- edgeTag (MSPauseLevel b) -< Pause `IN.pressBool` i
 
-  let outputsUnscored = PlayingOutputs $ PlayingOutputsData { windowDimPO   = windowDim baton 
+  let outputsUnscored = PlayingOutputs $ PlayingOutputsData { windowDimPO   = windowDim b 
                                                             , userBoundsPO  = userBounds pConf
                                                             , simBoundsPO   = simBounds pConf
                                                             , timeTotal     = timeNow
@@ -250,15 +205,15 @@ playingSF pConf bs = proc userI -> do
 
   let winBool = applyPOTest (winTest pConf) outputsScored
   let loseBool = applyPOTest (loseTest pConf) outputsScored
-  wonLevel <- edgeTag (WinLevelMS bs) -< winBool
-  lostLevel <- edgeTag (LoseLevelMS bs) -< loseBool
+  wonLevel <- edgeTag (MSWinLevel b) -< winBool
+  lostLevel <- edgeTag (MSLoseLevel b) -< loseBool
   let switchEvent = lMerge wonLevel (lMerge lostLevel menuPressed)
   
   let outputsFinal = updateSwitchEvent outputsScored switchEvent
 
   returnA -< outputsFinal
 
-applyScoreMeasure :: ScoreMeasure -> GameOutputs -> Int 
+applyScoreMeasure :: ScoreMeasureType -> GameOutputs -> Int 
 applyScoreMeasure TotalAliveNow (PlayingOutputs pod) = totalAlive pod
 applyScoreMeasure TimePassed    (PlayingOutputs pod) = round $ timeTotal pod
 applyScoreMeasure _ _ = error "applyScoreMeasure: applied to wrong GameOutputs subtype"
@@ -270,24 +225,24 @@ applyPOTest _ _ = error "applyPOTest: applied to wrong GameOutputs subtype"
 
 ---
 
-winScreenSF :: WinScreenConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-winScreenSF wsConf bs = proc userI -> do
+winScreenSF :: WinScreenConfigs -> Baton -> SF UserInputs GameOutputs
+winScreenSF wsConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ winScreenInputMap wsConf
-  nlEvent <- edgeTag (NextLevelMS bs) -< NextLevel `IN.pressBool` i
+  nlEvent <- edgeTag (MSNextLevel b) -< NextLevel `IN.pressBool` i
   returnA -< WinScreenOutputs $ WinScreenOutputsData {winScreenColOut = winScreenCol wsConf, nextLevelEvent = nlEvent, quitWS = Quit `IN.pressBool` i}
 
 ---
 
-loseScreenSF :: LoseScreenConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-loseScreenSF lsConf bs = proc userI -> do
+loseScreenSF :: LoseScreenConfigs -> Baton -> SF UserInputs GameOutputs
+loseScreenSF lsConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ loseScreenInputMap lsConf
-  rlEvent <- edgeTag (RestartLevelMS bs) -< RetryLevel `IN.pressBool` i
+  rlEvent <- edgeTag (MSRestartLevel b) -< RetryLevel `IN.pressBool` i
   returnA -< LoseScreenOutputs $ LoseScreenOutputsData {loseScreenColOut = loseScreenCol lsConf, retryLevelEvent = rlEvent, quitLS = Quit `IN.pressBool` i}
 
 ---
 
-endScreenSF :: EndScreenConfigs -> [Maybe Baton] -> SF UserInputs GameOutputs
-endScreenSF esConf bs = proc userI -> do
+endScreenSF :: EndScreenConfigs -> Baton -> SF UserInputs GameOutputs
+endScreenSF esConf b = proc userI -> do
   let i = IN.keyRemapToHM userI $ endScreenInputMap esConf
   returnA -< EndScreenOutputs $ EndScreenOutputsData {endScreenColOut = endScreenCol esConf, quitES = Quit `IN.pressBool` i}
 
@@ -308,18 +263,18 @@ updateSwitchEvent :: GameOutputs -> Event ModeSwitch -> GameOutputs
 updateSwitchEvent (PlayingOutputs x) e = PlayingOutputs (x {switchEvent = e})
 updateSwitchEvent _                  _ = error "updateSwitchEvent applied to wrong GameOutputs subtype"
 
-lifeUpdateBounded :: XYBounds -> (LH.Grid, LH.Grid) -> (Event (), Event (LH.Grid, LH.Grid)) -> (LH.Grid, LH.Grid)
+lifeUpdateBounded :: XYBounds -> (Grid, Grid) -> (Event (), Event (Grid, Grid)) -> (Grid, Grid)
 lifeUpdateBounded _         lifeCurrent (NoEvent, NoEvent)           = lifeCurrent
 lifeUpdateBounded _         lifeCurrent (NoEvent, Event pendings)    = lifeCurrent `addExtraBirthsDeaths` pendings
 lifeUpdateBounded simBounds lifeCurrent (Event _, dumpPendingsEvent) = lifeUpdateBounded simBounds lifeNew (NoEvent, dumpPendingsEvent) 
   where lifeNew = LH.simpleLifeBounded simBounds lifeCurrent
 
-addCoOrdsToPendings :: (LH.Grid, LH.Grid) -> ([(Int, Int)], [(Int, Int)]) -> (LH.Grid, LH.Grid)
+addCoOrdsToPendings :: (Grid, Grid) -> ([(Int, Int)], [(Int, Int)]) -> (Grid, Grid)
 addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   [])   = (birthsGrid, deathsGrid)
 addCoOrdsToPendings (birthsGrid, deathsGrid) (b:bs, ds)   = addCoOrdsToPendings (LH.insert b birthsGrid, LH.delete b deathsGrid) (bs, ds)
 addCoOrdsToPendings (birthsGrid, deathsGrid) ([],   d:ds) = addCoOrdsToPendings (LH.delete d birthsGrid, LH.insert d deathsGrid) ([], ds) 
 
-addExtraBirthsDeaths :: (LH.Grid, LH.Grid) -> (LH.Grid, LH.Grid) -> (LH.Grid, LH.Grid)
+addExtraBirthsDeaths :: (Grid, Grid) -> (Grid, Grid) -> (Grid, Grid)
 addExtraBirthsDeaths (life_grid, check_grid) (birthsGrid, deathsGrid) = 
   ((life_grid `LH.unionGrid` birthsGrid) `LH.differenceGrid` deathsGrid, check_grid `LH.unionGrid` LH.addNeighbours (birthsGrid `LH.unionGrid` deathsGrid))
 

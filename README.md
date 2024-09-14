@@ -40,7 +40,8 @@ RUN WITH:
 
 ### To do now
 
-1. Code cleanup
+1. Code cleanup..
+1. Use NonEmpty and Maybes over partial functions (like `head`)
 1. Switch to paused upon loss of focus
 1. Resizeable window
 1. Major issue: Different modes may sometimes require different `DisplayResources`
