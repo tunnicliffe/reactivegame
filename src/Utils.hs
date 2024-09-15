@@ -1,4 +1,6 @@
+{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Utils
   ( loadDisplayResources
@@ -9,66 +11,66 @@ module Utils
   , splitN
   ) where
 
-import FRP.Yampa        (DTime)
-import SDL
-import Data.Aeson       (decodeFileStrict)
-import System.Random    (RandomGen, mkStdGen, split)
-import System.Directory (doesFileExist)
+import ClassyPrelude
 
-import Types (UserInputs, nullUserInputs, DisplayConfig(..), DisplayResources(..), Baton(..), LevelType(..))
+import Data.Aeson (decodeFileStrict)
+import FRP.Yampa (DTime)
 import Input (detectInputs)
+import System.Directory (doesFileExist)
+import System.Random (RandomGen, mkStdGen, split)
+import Types (UserInputs, nullUserInputs, DisplayConfig(..), DisplayResources (DisplayResources), Baton (Baton), LevelType (StartScreen, Level1))
 
-import qualified SDL.Framerate as Framerate
-import qualified SDL.Font as Font
-import qualified SDL.Mixer as Mixer
 import qualified Data.HashMap.Strict as HM
-import qualified Data.List.NonEmpty as NE
+import qualified SDL
+import qualified SDL.Font as Font
+import qualified SDL.Framerate as Framerate
+import qualified SDL.Mixer as Mixer
 
 ---
 
 loadDisplayResources :: DisplayConfig -> IO DisplayResources
-loadDisplayResources dc = do
+loadDisplayResources DisplayConfig{..} = do
 
-  wind <- createWindow (windowName dc) defaultWindow
-  rend <- createRenderer wind (-1) defaultRenderer
-  rendererDrawBlendMode rend $= BlendAlphaBlend
+  wind <- SDL.createWindow windowName SDL.defaultWindow
+  rend <- SDL.createRenderer wind (-1) SDL.defaultRenderer
+  SDL.rendererDrawBlendMode rend SDL.$= SDL.BlendAlphaBlend
 
   Font.initialize
   
-  gugiFontCounter <- Font.load (fontPath dc) (counterFontSize dc)
-  scoreSurface <- Font.blended gugiFontCounter (counterCol dc) "Score: "
-  scoreT <- createTextureFromSurface rend scoreSurface
-  freeSurface scoreSurface
-  timeSurface <- Font.blended gugiFontCounter (counterCol dc) "Time: "
-  timeT <- createTextureFromSurface rend timeSurface
-  freeSurface timeSurface
-  fpsSurface <- Font.blended gugiFontCounter (counterCol dc) "FPS: "
-  fpsT <- createTextureFromSurface rend fpsSurface
-  freeSurface fpsSurface
-  digitSurfaces <- mapM (Font.blendedGlyph gugiFontCounter (counterCol dc)) "0123456789."
-  digitTs <- mapM (createTextureFromSurface rend) digitSurfaces
-  mapM_ freeSurface digitSurfaces
+  gugiFontCounter <- Font.load fontPath counterFontSize
+  scoreSurface <- Font.blended gugiFontCounter counterCol "Score: "
+  scoreT <- SDL.createTextureFromSurface rend scoreSurface
+  SDL.freeSurface scoreSurface
+  timeSurface <- Font.blended gugiFontCounter counterCol "Time: "
+  timeT <- SDL.createTextureFromSurface rend timeSurface
+  SDL.freeSurface timeSurface
+  fpsSurface <- Font.blended gugiFontCounter counterCol "FPS: "
+  fpsT <- SDL.createTextureFromSurface rend fpsSurface
+  SDL.freeSurface fpsSurface
+  digitSurfaces <- mapM (Font.blendedGlyph gugiFontCounter counterCol) "0123456789."
+  digitTs <- mapM (SDL.createTextureFromSurface rend) digitSurfaces
+  mapM_ SDL.freeSurface digitSurfaces
   Font.free gugiFontCounter
 
-  gugiFontText <- Font.load "fonts/Gugi-Regular.ttf" (textFontSize dc)
+  gugiFontText <- Font.load "fonts/Gugi-Regular.ttf" textFontSize
   let charList = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ ".,+=!?_-()[]{}<>;: "
-  charSurfaces <- mapM (Font.blendedGlyph gugiFontText (textCol dc)) charList
-  charTs <- mapM (createTextureFromSurface rend) charSurfaces
-  mapM_ freeSurface charSurfaces
+  charSurfaces <- mapM (Font.blendedGlyph gugiFontText textCol) charList
+  charTs <- mapM (SDL.createTextureFromSurface rend) charSurfaces
+  mapM_ SDL.freeSurface charSurfaces
   let charTMap = HM.fromList (zip charList charTs) 
   Font.free gugiFontText
   
   Font.quit
 
-  Mixer.openAudio Mixer.defaultAudio 512 -- The ChunkSize I am using here is totally arbitrary
+  Mixer.openAudio Mixer.defaultAudio 512
   testChunk <- Mixer.load "sounds/447__tictacshutup__prac-snare.wav"
 
   pure $ DisplayResources wind rend scoreT timeT fpsT digitTs charTMap testChunk
 
 loadFramerateManager :: DisplayConfig -> IO Framerate.Manager 
-loadFramerateManager displayConf = do 
+loadFramerateManager dc = do 
   framerateManager <- Framerate.manager 
-  Framerate.set framerateManager (framerateLimit displayConf)
+  Framerate.set framerateManager $ framerateLimit dc
   pure framerateManager
 
 initialInputs :: Framerate.Manager -> IO UserInputs
