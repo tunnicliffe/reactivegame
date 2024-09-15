@@ -8,7 +8,6 @@ module Utils
   , initialInputs
   , detectDTimeAndInputs
   , initialBaton
-  , splitN
   ) where
 
 import ClassyPrelude
@@ -90,25 +89,7 @@ detectDTimeAndInputs framerateManager _ = do
 initialBaton :: DisplayConfig -> Int -> Baton 
 initialBaton dc seed = Baton StartScreen Level1 (mkStdGen seed) (initialWindowDim dc) []
 
---
-
-split3 :: (RandomGen g) => g -> (g, g, g)
-split3 g = (g1, g2, g3) where
-  (g0, g1) = split g 
-  (g2, g3) = split g0
-
-splitN :: (RandomGen g) => Int -> g -> [g]
-splitN n g | n < 1 = error "splitN: n < 1."
-splitN 1 g = [g]
-splitN n g = let (g', g'') = split g in g' : splitN (n-1) g''
-
 {-
-splitInf :: (RandomGen g) => g -> [g]
-splitInf g = 
-  let (g', g'') = split g 
-  in  g' : splitInf g''
--- Don't use this, as the [StdGen] will be written to file
-
 testImage renderer file_path = do
   texture <- Image.loadTexture renderer file_path
   copy renderer texture Nothing (Just $ Rectangle (P (V2 0 0)) (V2 635 476))

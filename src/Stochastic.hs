@@ -1,7 +1,8 @@
 {-# LANGUAGE BangPatterns #-}
 
 module Stochastic 
-  ( brownianMotion2D 
+  ( splitN
+  , brownianMotion2D 
   , brownianMotion3D
   ) where
 
@@ -14,6 +15,17 @@ import Data.Word (Word32)
 import Control.Parallel.Strategies (parMap, rseq)
 
 import SDL (V2 (..), V3 (..))
+
+
+split3 :: (RandomGen g) => g -> (g, g, g)
+split3 g = (g1, g2, g3) where
+  (g0, g1) = split g 
+  (g2, g3) = split g0
+
+splitN :: (RandomGen g) => Int -> g -> [g]
+splitN n g | n < 1 = error "splitN: n < 1."
+splitN 1 g = [g]
+splitN n g = let (g', g'') = split g in g' : splitN (n-1) g''
 
 -- Sampling functions adapted from 
 -- https://hackage.haskell.org/package/mwc-random-0.14.0.0/docs/src/System.Random.MWC.Distributions.html

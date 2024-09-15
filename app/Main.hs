@@ -1,6 +1,6 @@
 import Data.Yaml (decodeFileThrow)
 import FRP.Yampa (reactimate)
-import GameLogic (gameSF)
+import Game (gameSF)
 import Output (displayFunction)
 import Types (DisplayResources (window)) -- plus FromJSON instances
 
