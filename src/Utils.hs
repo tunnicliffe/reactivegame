@@ -11,13 +11,13 @@ module Utils
   ) where
 
 import ClassyPrelude
+import Types
 
 import Data.Aeson (decodeFileStrict)
 import FRP.Yampa (DTime)
 import Input (detectInputs)
 import System.Directory (doesFileExist)
 import System.Random (RandomGen, mkStdGen, split)
-import Types (UserInputs, nullUserInputs, DisplayConfig(..), DisplayResources (DisplayResources), Baton (Baton), LevelType (StartScreen, Level1))
 
 import qualified Data.HashMap.Strict as HM
 import qualified SDL
@@ -30,41 +30,40 @@ import qualified SDL.Mixer as Mixer
 loadDisplayResources :: DisplayConfig -> IO DisplayResources
 loadDisplayResources DisplayConfig{..} = do
 
-  wind <- SDL.createWindow windowName SDL.defaultWindow
-  rend <- SDL.createRenderer wind (-1) SDL.defaultRenderer
-  SDL.rendererDrawBlendMode rend SDL.$= SDL.BlendAlphaBlend
+  window <- SDL.createWindow windowName SDL.defaultWindow
+  renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
+  SDL.rendererDrawBlendMode renderer SDL.$= SDL.BlendAlphaBlend
 
   Font.initialize
   
   gugiFontCounter <- Font.load fontPath counterFontSize
   scoreSurface <- Font.blended gugiFontCounter counterCol "Score: "
-  scoreT <- SDL.createTextureFromSurface rend scoreSurface
+  scoreTexture <- SDL.createTextureFromSurface renderer scoreSurface
   SDL.freeSurface scoreSurface
   timeSurface <- Font.blended gugiFontCounter counterCol "Time: "
-  timeT <- SDL.createTextureFromSurface rend timeSurface
+  timeTexture <- SDL.createTextureFromSurface renderer timeSurface
   SDL.freeSurface timeSurface
   fpsSurface <- Font.blended gugiFontCounter counterCol "FPS: "
-  fpsT <- SDL.createTextureFromSurface rend fpsSurface
+  fpsTexture <- SDL.createTextureFromSurface renderer fpsSurface
   SDL.freeSurface fpsSurface
   digitSurfaces <- mapM (Font.blendedGlyph gugiFontCounter counterCol) "0123456789."
-  digitTs <- mapM (SDL.createTextureFromSurface rend) digitSurfaces
+  digitTextures <- mapM (SDL.createTextureFromSurface renderer) digitSurfaces
   mapM_ SDL.freeSurface digitSurfaces
   Font.free gugiFontCounter
 
   gugiFontText <- Font.load "fonts/Gugi-Regular.ttf" textFontSize
   let charList = ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'] ++ ".,+=!?_-()[]{}<>;: "
   charSurfaces <- mapM (Font.blendedGlyph gugiFontText textCol) charList
-  charTs <- mapM (SDL.createTextureFromSurface rend) charSurfaces
+  charTs <- mapM (SDL.createTextureFromSurface renderer) charSurfaces
   mapM_ SDL.freeSurface charSurfaces
-  let charTMap = HM.fromList (zip charList charTs) 
+  let charTextureMap = HM.fromList (zip charList charTs) 
   Font.free gugiFontText
-  
   Font.quit
 
   Mixer.openAudio Mixer.defaultAudio 512
-  testChunk <- Mixer.load "sounds/447__tictacshutup__prac-snare.wav"
+  audioChunk <- Mixer.load "sounds/447__tictacshutup__prac-snare.wav"
 
-  pure $ DisplayResources wind rend scoreT timeT fpsT digitTs charTMap testChunk
+  pure $ DisplayResources{..}
 
 loadFramerateManager :: DisplayConfig -> IO Framerate.Manager 
 loadFramerateManager dc = do 

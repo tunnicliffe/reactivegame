@@ -43,15 +43,14 @@ RUN WITH:
 1. Should `UserInputs` be processed so they're just a collection of `InputAction`? Then `switchModeDetect` could listen to them and catch them. 
 1. Could we have a tpye representing each mode, which then may make the routing code simpler?
 1. Code cleanup..
-1. Use NonEmpty and Maybes over partial functions (like `head`)
+1. Use `NonEmpty` and `Maybe` over partial functions (like `head`)
 1. Switch to paused upon loss of focus
 1. Resizeable window
 1. Major issue: Different modes may sometimes require different `DisplayResources`
 1. `initial_offset` is in pixels, not grid-squares
 1. 'Scroll-speed-multiplier' needs to be added back to the configs
-1. `drawSquaresFromCoOrds` doesn't check if the squares are visible before sending their rendering instructions. However, this doesn't seem to bother the GPU as the code is likely CPU-bound anyway.
-1. Anything in `Types.hs` that is only used by one module should only be in that module.
-1. `RecordWildCards` can be used to construct types too.
+1. `drawSquaresFromCoOrds` doesn't check if the squares are visible before sending their rendering instructions..
+1. Anything in `Types.hs` that is only used by one module should probably only be in that module.
 1. For general clarity, fields are going to have simple names, and qualified imports will avoid overlaps. This will probably mean breaking off types into their own module (also, not a bad thing).
 
 ---
@@ -61,5 +60,4 @@ RUN WITH:
 1. More sound effects from [freesoundorg](https://freesound.org/)
 1. Setting the 'clip rectangle' of the renderer to the window size can be done, but doesn't seem to do anything? Maybe it is happening automatically under the hood.. or maybe the 'viewport' is doing that work?
 1. [From 60FPS to 500](http://keera.co.uk/blog/2014/10/15/from-60-fps-to-500/)
-1. One day.. [3D?](https://hackage.haskell.org/package/HGamer3D)
 1. Compare performance for different map types

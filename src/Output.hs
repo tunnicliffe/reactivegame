@@ -139,12 +139,12 @@ digits :: (Num a, Show a) => a -> [Int]
 digits n = map (readWithDot . (: [])) $ show n
 
 drawDigits :: Renderer -> [Texture] -> V2 CInt -> [Int] -> IO ()
-drawDigits _ _ _ [] = pure ()
 drawDigits rend dts offset (n:ns) = do
   digitTWidth <- textureWidth <$> queryTexture (head dts)
   copySimple rend (dts !! n) offset
   let newOffset = offset + V2 digitTWidth 0
   drawDigits rend dts newOffset ns
+drawDigits _ _ _ [] = pure ()
 
 copySimple :: Renderer -> Texture -> V2 CInt -> IO ()
 copySimple rend t offset = do 
