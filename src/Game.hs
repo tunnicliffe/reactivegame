@@ -12,8 +12,9 @@ import qualified GameLogic as GL
 
 
 gameSF :: GameConfigs -> Baton -> SF UserInputs GameOutputs
-gameSF gc baton | null (levelConfigsMap gc) = error "No levels to play!"
-gameSF gc baton = kSwitch (GL.startMenuSF (startMenuConfigs gc) baton) switchModeDetectSF (masterRouter gc) 
+gameSF gc _ | null (levelConfigsMap gc) = error "No levels to play!"
+gameSF gc baton = kSwitch (GL.startMenuSF (startMenuConfigs gc) baton) switchModeDetectSF (masterRouter gc)
+-- ^ Start on the startMenuSF, listen for ModeSwitch with switchModeDetectSF, change modes via masterRouter
 
 ---
 
@@ -28,23 +29,23 @@ switchModeDetect (_, IntroOutputs o)      = leaveIntroEvent o
 switchModeDetect (_, WinScreenOutputs o)  = nextLevelEvent o
 switchModeDetect (_, LoseScreenOutputs o) = retryLevelEvent o
 switchModeDetect (_, EndScreenOutputs o)  = NoEvent
-  -- TODO: We could directly listen for quitting or pausing inputs.
-  -- Advantage being that we wouldn't need a different quitIntro, quitPlaying, etc.
+-- ^ TODO: We could directly listen for quitting or pausing inputs.
+-- Advantage being that we wouldn't need a different quitIntro, quitPlaying, etc.
 
 masterRouter :: GameConfigs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
-masterRouter gc currentSF (MSPauseLevel baton) = kSwitch (GL.pauseMenuSF (pauseMenuConfigs gc) baton) switchModeDetectSF (pausedRouter gc currentSF)
-masterRouter gc _ (MSNextLevel baton)    = kSwitch (GL.introSF (introConfigs (nextLevConf gc baton)) baton)              switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSLeaveIntro baton)   = kSwitch (GL.playingSF (playingConfigs (currentLevConf gc baton)) baton)       switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSWinLevel baton)     = kSwitch (GL.winScreenSF (winScreenConfigs (currentLevConf gc baton)) baton)   switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSLoseLevel baton)    = kSwitch (GL.loseScreenSF (loseScreenConfigs (currentLevConf gc baton)) baton) switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSRestartLevel baton) = kSwitch (GL.introSF (introConfigs (currentLevConf gc baton)) baton)           switchModeDetectSF (masterRouter gc)
+masterRouter gc currentSF (MSPauseLevel b) = kSwitch (GL.pauseMenuSF (pauseMenuConfigs gc) b) switchModeDetectSF (pausedRouter gc currentSF)
+masterRouter gc _ (MSNextLevel b)    = kSwitch (GL.introSF (introConfigs (nextLevConf gc b)) b)              switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSLeaveIntro b)   = kSwitch (GL.playingSF (playingConfigs (currentLevConf gc b)) b)       switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSWinLevel b)     = kSwitch (GL.winScreenSF (winScreenConfigs (currentLevConf gc b)) b)   switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSLoseLevel b)    = kSwitch (GL.loseScreenSF (loseScreenConfigs (currentLevConf gc b)) b) switchModeDetectSF (masterRouter gc)
+masterRouter gc _ (MSRestartLevel b) = kSwitch (GL.introSF (introConfigs (currentLevConf gc b)) b)           switchModeDetectSF (masterRouter gc)
 --masterRouter _  _ (MSLoadLevel storedSF) = kSwitch storedSF switchModeDetectSF $ masterRouter gc
 
---Need additional routing function to store the game while paused:
+-- | Need additional routing function to store the game while paused
 pausedRouter :: GameConfigs -> SF UserInputs GameOutputs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
-pausedRouter gc storedSF _ MSUnpauseLevel      = kSwitch storedSF                                     switchModeDetectSF (masterRouter gc)
-pausedRouter gc _        _ (MSLoadLevel baton) = kSwitch (GL.pauseMenuSF (pauseMenuConfigs gc) baton) switchModeDetectSF (pausedRouter gc loadedSF)
-  where loadedSF = kSwitch (GL.playingSF (playingConfigs (currentLevConf gc baton)) baton) switchModeDetectSF (masterRouter gc)
+pausedRouter gc storedSF _ MSUnpauseLevel  = kSwitch storedSF                                 switchModeDetectSF (masterRouter gc)
+pausedRouter gc _        _ (MSLoadLevel b) = kSwitch (GL.pauseMenuSF (pauseMenuConfigs gc) b) switchModeDetectSF (pausedRouter gc loadedSF)
+  where loadedSF = kSwitch (GL.playingSF (playingConfigs (currentLevConf gc b)) b) switchModeDetectSF (masterRouter gc)
 
 ---
 

@@ -15,8 +15,8 @@ RUN WITH:
 
 ### Code layout
 
-* **app/Main.hs** calls *reactimate* from **FRP.Yampa** using initialisation functions from **Utils.hs** (mainly parsing and loading assets).
-* **configs** folder contains the configuration files in yaml format. 
+* **app/Main.hs** calls *reactimate* from **FRP.Yampa** using initialisation functions from **Utils.hs** (parsing configs and loading assets).
+* **configs** folder contains the configuration files in yaml format.
 * *GameConfigs* are immutable and accessible only from the *gameSF*. Constants that determine the logic of the game, such as win conditions, go in here. This allows them to be changed without the need for re-compilation.
 * *DisplayConfigs* are immutable and accessible only from the *displayFunction*. Constants that determine the look and sound of the game, such as text colour, go in here. This allows them to be changed without the need for re-compilation.
 * *DisplayResources* are immutable and accessible only from the *displayFunction*, but require some initialisation using the values in the *DisplayConfigs*. Textures and sound clips go in here.

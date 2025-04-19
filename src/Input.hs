@@ -41,6 +41,7 @@ recordEvent acc pl = case pl of
     acc {quitBool = True}
   _ ->
     acc
+  -- TODO: There are many other constructors of EventPayload that we could handle
 
 addKeyInput :: UserInputs -> Keycode -> InputState -> UserInputs
 addKeyInput gi kc ks = gi {keyboardInputs = (keycodeToIK kc, ks) : keyboardInputs gi}
@@ -65,15 +66,15 @@ releaseBool ia hm = case HM.lookup ia hm of
   Just Release -> True
   _            -> False
 
+-- | For when two inputs have opposing effects, and we want to check their state together
+-- e.g. 'move left' and 'move right'
+-- use when you want 'both pressed' == 'neither pressed'
 quantifyInputPair :: (a, a, a, a, a) -> (Maybe InputState, Maybe InputState) -> a 
 quantifyInputPair (vLow, low, mid, high, vHigh) (Just Hold,  Nothing) = vHigh
 quantifyInputPair (vLow, low, mid, high, vHigh) (Just Press, Nothing) = high
 quantifyInputPair (vLow, low, mid, high, vHigh) (Nothing, Just Hold)  = vLow
 quantifyInputPair (vLow, low, mid, high, vHigh) (Nothing, Just Press) = low 
 quantifyInputPair (vLow, low, mid, high, vHigh) _                     = mid
-  -- For when two inputs have opposing effects, and we want to check their state together
-  -- e.g. 'move left' and 'move right'
-  -- use when you want 'both pressed' == 'neither pressed'
 
 quantifyInputPairSF :: (a, a, a, a, a) -> SF (Maybe InputState, Maybe InputState) a
 quantifyInputPairSF levels = arrPrim $ quantifyInputPair levels

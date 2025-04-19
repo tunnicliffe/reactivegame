@@ -8,7 +8,7 @@ module Types.Configs
   , LevelConfigs(..)
   , IntroConfigs(..)
   , PlayingConfigs(..)
-  , ScoreMeasureType(..)
+  , ScoreMeasure(..)
   , PlayingOutputsTest(..)
   , WinScreenConfigs(..)
   , LoseScreenConfigs(..)
@@ -24,7 +24,7 @@ import SDL (V4)
 import Types (Colour, XYBounds, Grid, LevelType, InputKey, InputAction)
 
 
--- Immutable variables that can only be accessed by the SF UserInputs GameOutputs in GameLogic.hs
+-- | Immutable variables that can only be accessed by the `SF UserInputs GameOutputs` in GameLogic.hs
 data GameConfigs = GameConfigs 
   { pauseMenuConfigs  :: PauseMenuConfigs
   , startMenuConfigs  :: StartMenuConfigs
@@ -71,20 +71,21 @@ data PlayingConfigs = PlayingConfigs
   , minLifeDelay        :: Time
   , initialOffsets      :: (Double, Double) 
   , initialBoxSize      :: CInt
-  , scoreMeasure        :: ScoreMeasureType
+  , scoreMeasure        :: ScoreMeasure
   , winTest             :: PlayingOutputsTest 
   , loseTest            :: PlayingOutputsTest
   } deriving (Generic)
 instance FromJSON PlayingConfigs
-  -- scoreMeasure MUST NOT depend on score or switchEvent
-  -- win/loseTest MUST NOT depend on switchEvent (but can depend on score)
-  -- This is because they're implemented using omitted fields in the record syntax
+-- ^ scoreMeasure MUST NOT depend on score or switchEvent in PlayingOutputsData
+-- win/loseTest MUST NOT depend on switchEvent (but can depend on score) in PlayingOutputsData
+-- This is because they're implemented using omitted fields in the record syntax
+-- TODO: These should *not* be in Configs, they're properties of the level itself
 
-data ScoreMeasureType
+data ScoreMeasure
   = TotalAliveNow
   | TimePassed
   deriving (Generic)
-instance FromJSON ScoreMeasureType
+instance FromJSON ScoreMeasure
 
 data PlayingOutputsTest
   = ScoreOver Int

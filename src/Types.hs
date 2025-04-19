@@ -158,6 +158,9 @@ nullUserInputs = UserInputs
 data InputState = Press | Hold | Release 
   deriving (Eq)
 
+-- | Type for what action the InputKey is causing
+-- Each of our Configs types in GameConfigs have a Map InputKey InputAction
+-- We can use this to re-bind inputs to different actions
 data InputAction
   = Pause
   | Unpause
