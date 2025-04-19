@@ -34,12 +34,16 @@ switchModeDetect (_, EndScreenOutputs o)  = NoEvent
 
 masterRouter :: GameConfigs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
 masterRouter gc currentSF (MSPauseLevel b) = kSwitch (GL.pauseMenuSF (pauseMenuConfigs gc) b) switchModeDetectSF (pausedRouter gc currentSF)
-masterRouter gc _ (MSNextLevel b)    = kSwitch (GL.introSF (introConfigs (nextLevConf gc b)) b)              switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSLeaveIntro b)   = kSwitch (GL.playingSF (playingConfigs (currentLevConf gc b)) b)       switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSWinLevel b)     = kSwitch (GL.winScreenSF (winScreenConfigs (currentLevConf gc b)) b)   switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSLoseLevel b)    = kSwitch (GL.loseScreenSF (loseScreenConfigs (currentLevConf gc b)) b) switchModeDetectSF (masterRouter gc)
-masterRouter gc _ (MSRestartLevel b) = kSwitch (GL.introSF (introConfigs (currentLevConf gc b)) b)           switchModeDetectSF (masterRouter gc)
---masterRouter _  _ (MSLoadLevel storedSF) = kSwitch storedSF switchModeDetectSF $ masterRouter gc
+masterRouter gc _ (MSNextLevel b)    = kSwitchSame gc $ GL.introSF (introConfigs (nextLevConf gc b)) b
+masterRouter gc _ (MSLeaveIntro b)   = kSwitchSame gc $ GL.playingSF (playingConfigs (currentLevConf gc b)) b
+masterRouter gc _ (MSWinLevel b)     = kSwitchSame gc $ GL.winScreenSF (winScreenConfigs (currentLevConf gc b)) b
+masterRouter gc _ (MSLoseLevel b)    = kSwitchSame gc $ GL.loseScreenSF (loseScreenConfigs (currentLevConf gc b)) b
+masterRouter gc _ (MSRestartLevel b) = kSwitchSame gc $ GL.introSF (introConfigs (currentLevConf gc b)) b
+--masterRouter _  _ (MSLoadLevel storedSF) = kSwitchSame gc storedSF
+
+-- | A kSwitch with the same detector and continuation
+kSwitchSame :: GameConfigs -> SF UserInputs GameOutputs -> SF UserInputs GameOutputs
+kSwitchSame gc sf = kSwitch sf switchModeDetectSF (masterRouter gc)
 
 -- | Need additional routing function to store the game while paused
 pausedRouter :: GameConfigs -> SF UserInputs GameOutputs -> SF UserInputs GameOutputs -> ModeSwitch -> SF UserInputs GameOutputs
