@@ -31,27 +31,18 @@ RUN WITH:
 
 ---
 
-### Worth noting
-
-* We could drop the *InputKey* type and just use the scancodes or keycodes of each key. We'd likely see a peformance increase (as well as being simpler). However, the input maps we define in our configs would be significantly harder to read and write to normal users who haven't memorised the codes.
-* The segregation of *GameConfigs* and *DisplayConfigs* might be overkill. For example, the background colour of a level, defined in *GameConfigs*, has to be passed through the *GameOutputs* as something like *bgColOut*. I still prefer keeping things this way purely for simplicity.
-
----
-
 ### To do now
 
-1. Should `UserInputs` be processed so they're just a collection of `InputAction`? Then `switchModeDetect` could listen to them and catch them. 
-1. Could we have a tpye representing each mode, which then may make the routing code simpler?
-1. Code cleanup..
-1. Use `NonEmpty` and `Maybe` over partial functions (like `head`)
+1. Should `UserInputs` be processed so they're just a collection of `InputAction`? Then `switchModeDetect` could listen to them and catch them. But then, the game logic functions could just process lists..
+1. Could we have a type representing each mode, which may make the routing code simpler? `ModeSwitch Mode Baton`
 1. Switch to paused upon loss of focus
 1. Resizeable window
-1. Major issue: Different modes may sometimes require different `DisplayResources`
+1. Different modes may sometimes require different `DisplayResources`
 1. `initial_offset` is in pixels, not grid-squares
 1. 'Scroll-speed-multiplier' needs to be added back to the configs
 1. `drawSquaresFromCoOrds` doesn't check if the squares are visible before sending their rendering instructions..
 1. Anything in `Types.hs` that is only used by one module should probably only be in that module.
-1. For general clarity, fields are going to have simple names, and qualified imports will avoid overlaps. This will probably mean breaking off types into their own module (also, not a bad thing).
+1. For clarity, fields are going to have simple names and qualified imports will avoid overlaps. This will probably mean breaking off types into their own module (also, not a bad thing).
 
 ---
 
