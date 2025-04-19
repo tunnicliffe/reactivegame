@@ -40,6 +40,7 @@ RUN WITH:
 
 ### To do now
 
+1. Should `UserInputs` be processed so they're just a collection of `InputAction`? Then `switchModeDetect` could listen to them and catch them. 
 1. Could we have a tpye representing each mode, which then may make the routing code simpler?
 1. Code cleanup..
 1. Use NonEmpty and Maybes over partial functions (like `head`)
